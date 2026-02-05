@@ -22,7 +22,7 @@ else
     echo "Install jq or python3 to parse JSON" >&2
     echo "Raw response:" >&2
     echo "$resp" >&2
-    exit 1
+    exit 1ç
   fi
 fi
 
@@ -32,5 +32,15 @@ if [ -z "$access_token" ]; then
   exit 1
 fi
 
-# Print token (or export it)
-echo "$access_token"
+# Save token into .env (create or replace ZOOM_ACCESS_TOKEN)
+env_file=".env"
+touch "$env_file"
+
+# Use sed with | delimiter (macOS sed needs -i '') to safely replace if the key exists
+if grep -q "^ZOOM_ACCESS_TOKEN=" "$env_file"; then
+  sed -i '' "s|^ZOOM_ACCESS_TOKEN=.*|ZOOM_ACCESS_TOKEN=\"$access_token\"|" "$env_file"
+else
+  printf "\nZOOM_ACCESS_TOKEN=\"%s\"\n" "$access_token" >> "$env_file"
+fi
+
+echo "✓ Access token saved to $env_file"
