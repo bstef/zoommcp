@@ -66,20 +66,20 @@ The updater script targets:
 
 ## ChatGPT Apps (HTTP)
 
-ChatGPT connects to MCP servers over streaming HTTP or SSE, and you add the connector in ChatGPT Settings. Developer mode is required to create a custom MCP connector. citeturn0search1turn0search9
+ChatGPT connects to MCP servers over streaming HTTP or SSE, and you add the connector in ChatGPT Settings. Developer mode is required to create a custom MCP connector.
 
 1. Start the HTTP endpoint.
 ```bash
 MCP_TRANSPORT=http MCP_HTTP_PORT=8787 node index.js
 ```
 
-2. Expose the endpoint over public HTTPS (for local dev, use a tunnel such as ngrok or Cloudflare Tunnel). citeturn0search2
+2. Expose the endpoint over public HTTPS (for local dev, use a tunnel such as ngrok or Cloudflare Tunnel).
 
 3. In ChatGPT, go to Settings → Apps & Connectors → Advanced, enable Developer mode, then Create a connector for your MCP server. Use streaming HTTP and point to your public URL:
 ```text
 https://<public-host>/mcp
 ```
-citeturn0search2turn0search9
+
 
 ## Environment Variables
 
@@ -87,7 +87,7 @@ https://<public-host>/mcp
 `ZOOM_CLIENT_SECRET` Zoom Server-to-Server OAuth client secret  
 `ZOOM_ACCOUNT_ID` Zoom account ID  
 `ZOOM_ACCESS_TOKEN` Zoom access token (auto-refreshed by scripts)  
-`OPENAI_API_KEY` OpenAI API key (create in the API Keys page and store securely) citeturn0search0turn0search7  
+`OPENAI_API_KEY` OpenAI API key (create in the API Keys page and store securely)  
 `MCP_TRANSPORT` `stdio`, `http`, or `both` (default: `stdio`)  
 `MCP_HTTP_PORT` HTTP listen port (default: `8787`)  
 `MCP_HTTP_PATH` HTTP path (default: `/mcp`)  
