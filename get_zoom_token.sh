@@ -51,37 +51,3 @@ else
 fi
 
 echo "✓ Access token saved to $env_file"
-
-# Also update Claude desktop config with the token (if possible)
-claude_file="/Users/bstef/Library/Application Support/Claude/claude_desktop_config.json"
-claude_dir=$(dirname "$claude_file")
-mkdir -p "$claude_dir"
-
-if command -v jq >/dev/null 2>&1; then
-  if [ ! -f "$claude_file" ]; then
-    echo '{}' > "$claude_file"
-  fi
-  tmpfile=$(mktemp)
-  jq --arg t "$access_token" '.ZOOM_ACCESS_TOKEN = $t' "$claude_file" > "$tmpfile" && mv "$tmpfile" "$claude_file"
-  echo "✓ Updated Claude config: $claude_file"
-elif command -v python3 >/dev/null 2>&1; then
-  python3 - <<PY
-import json,os
-p = os.path.expanduser("$claude_file")
-try:
-    if os.path.exists(p):
-        with open(p,'r') as f:
-            content = f.read().strip()
-            data = json.loads(content) if content else {}
-    else:
-        data = {}
-except Exception:
-    data = {}
-data['ZOOM_ACCESS_TOKEN'] = os.environ.get('ACCESS_TOKEN_PLACEHOLDER', None) or '''$access_token'''
-with open(p,'w') as f:
-    json.dump(data,f,indent=2)
-print('✓ Updated Claude config: {}'.format(p))
-PY
-else
-  echo "Warning: neither jq nor python3 available to update $claude_file" >&2
-fi
