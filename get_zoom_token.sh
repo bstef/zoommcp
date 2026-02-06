@@ -51,3 +51,4 @@ else
 fi
 
 echo "✓ Access token saved to $env_file"
+echo $ZOOM_ACCESS_TOKEN
