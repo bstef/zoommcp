@@ -10,7 +10,9 @@ fi
 
 : "${ZOOM_ACCESS_TOKEN:?set ZOOM_ACCESS_TOKEN (e.g., in .env)}"
 
-config_file="${CLAUDE_CONFIG_FILE:-/Users/bstef/Library/Application Support/Claude/claude_desktop_config.json}"
+# Default Claude config path (handle spaces safely via a separate variable)
+default_config="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+config_file="${CLAUDE_CONFIG_FILE:-$default_config}"
 server_name="${CLAUDE_MCP_SERVER_NAME:-zoom}"
 env_key="${CLAUDE_ZOOM_ENV_KEY:-ZOOM_ACCESS_TOKEN}"
 

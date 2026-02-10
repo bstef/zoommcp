@@ -3,6 +3,16 @@ set -euo pipefail
 
 APP_NAME="${CLAUDE_APP_NAME:-Claude}"
 
+# Refresh the Zoom access token before restarting Claude
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$script_dir/get_zoom_token.sh" ]; then
+  "$script_dir/get_zoom_token.sh" >/dev/null 2>&1 || true
+  # Update Claude config with the new token
+  if [ -f "$script_dir/update_claude_config.sh" ]; then
+    "$script_dir/update_claude_config.sh" >/dev/null 2>&1 || true
+  fi
+fi
+
 # Try graceful quit first
 osascript -e "tell application \"${APP_NAME}\" to quit" >/dev/null 2>&1 || true
 

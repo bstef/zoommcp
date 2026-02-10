@@ -45,10 +45,18 @@ touch "$env_file"
 
 # Use sed with | delimiter (macOS sed needs -i '') to safely replace if the key exists
 if grep -q "^ZOOM_ACCESS_TOKEN=" "$env_file"; then
-  sed -i '' "s|^ZOOM_ACCESS_TOKEN=.*|ZOOM_ACCESS_TOKEN=\"$access_token\"|" "$env_file"
+  # Prefer GNU sed syntax when available, fall back to BSD (macOS) sed
+  if sed --version >/dev/null 2>&1; then
+    sed -i "s|^ZOOM_ACCESS_TOKEN=.*|ZOOM_ACCESS_TOKEN=\"$access_token\"|" "$env_file"
+  else
+    sed -i '' "s|^ZOOM_ACCESS_TOKEN=.*|ZOOM_ACCESS_TOKEN=\"$access_token\"|" "$env_file"
+  fi
 else
   printf "\nZOOM_ACCESS_TOKEN=\"%s\"\n" "$access_token" >> "$env_file"
 fi
 
+# Export the token into the current process environment for immediate use
+export ZOOM_ACCESS_TOKEN="$access_token"
+
 echo "✓ Access token saved to $env_file"
-echo $ZOOM_ACCESS_TOKEN
+echo "$ZOOM_ACCESS_TOKEN"
