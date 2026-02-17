@@ -31,19 +31,40 @@ else
   fi
 fi
 
-# Try graceful quit first
-osascript -e "tell application \"${APP_NAME}\" to quit" >/dev/null 2>&1 || true
+# Try graceful quit first (suppress errors and continue)
+osascript -e "tell application \"${APP_NAME}\" to quit" >/dev/null 2>&1 || {
+  echo "Note: Claude app not running or could not quit via AppleScript" >&2
+}
 
 # Give it a moment to exit
-sleep 1
+sleep 2
 
 # If still running, force quit
 if pgrep -x "${APP_NAME}" >/dev/null 2>&1; then
+  echo "Force quitting ${APP_NAME}..." >&2
   pkill -x "${APP_NAME}" || true
-  sleep 1
+  sleep 2
 fi
 
-# Relaunch
-open -a "${APP_NAME}"
+# Verify the app exists before launching
+if [ ! -d "/Applications/${APP_NAME}.app" ]; then
+  echo "Error: ${APP_NAME} application not found at /Applications/${APP_NAME}.app" >&2
+  exit 1
+fi
 
-echo "✓ Restarted ${APP_NAME}"
+# Relaunch the app
+open -a "${APP_NAME}" 2>/dev/null || {
+  echo "Error: Could not launch ${APP_NAME}" >&2
+  exit 1
+}
+
+# Wait for app to start
+sleep 2
+
+# Verify it started
+if pgrep -x "${APP_NAME}" >/dev/null 2>&1; then
+  echo "✓ Successfully restarted ${APP_NAME}"
+else
+  echo "Warning: ${APP_NAME} may not have started properly" >&2
+  exit 1
+fi
