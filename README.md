@@ -41,6 +41,7 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
    ```
    
    This script will:
+   - Open your Zoom upcoming meetings page in your default browser
    - Check if access token is expired
    - Fetch a new token if needed
    - Update Claude Desktop config
@@ -51,7 +52,7 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
 
 | Script | Purpose |
 |--------|---------|
-| **`run.sh`** | Main entry point - orchestrates token check, refresh, config update, Claude restart, and server startup |
+| **`run.sh`** | Main entry point - opens Zoom upcoming meetings page, orchestrates token check, refresh, config update, Claude restart, and server startup |
 | **`get_zoom_token.sh`** | Fetches a new Zoom access token using Server-to-Server OAuth and saves it to `.env` |
 | **`check_zoom_token.sh`** | Validates current token by checking JWT expiration claim (exits 0 if valid, 1 if expired/missing) |
 | **`update_claude_config.sh`** | Injects `ZOOM_ACCESS_TOKEN` into Claude Desktop config file |
