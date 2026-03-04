@@ -1,30 +1,145 @@
 #!/usr/bin/env bash
-# Wrapper script to set environment variables and run the MCP server
+set -euo pipefail
 
-# Get the directory of this script
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# All-in-one launcher: ensure Claude is running, refresh token only if expired,
+# then start the MCP server.
 
-# Load environment variables from .env file if it exists
-if [ -f "$DIR/.env" ]; then
-  set -a
-  source "$DIR/.env"
-  set +a
-fi
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CLAUDE_APP_NAME="${CLAUDE_APP_NAME:-Claude}"
+FORCE_REFRESH=0
 
-# Export the token if provided as argument
-if [ -n "${ZOOM_ACCESS_TOKEN:-}" ]; then
-  export ZOOM_ACCESS_TOKEN
-fi
+log() {
+  echo "$*" >&2
+}
 
-# If ZOOM_ACCESS_TOKEN is not set yet, try to get it from Claude config
-if [ -z "${ZOOM_ACCESS_TOKEN:-}" ]; then
-  TOKEN=$(cat "$HOME/Library/Application Support/Claude/claude_desktop_config.json" 2>/dev/null | \
-          jq -r '.mcpServers.zoom.env.ZOOM_ACCESS_TOKEN // empty' 2>/dev/null)
-  
-  if [ -n "$TOKEN" ] && [ "$TOKEN" != "null" ]; then
-    export ZOOM_ACCESS_TOKEN="$TOKEN"
+usage() {
+  cat >&2 <<USAGE
+Usage: $0 [-f|--force]
+  -f, --force    Force fetch a new token before starting MCP
+USAGE
+  exit 0
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -f|--force)
+      FORCE_REFRESH=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      log "Unknown option: $1"
+      usage
+      ;;
+  esac
+done
+
+load_env() {
+  if [ -f "$DIR/.env" ]; then
+    set -a
+    source "$DIR/.env"
+    set +a
   fi
-fi
+}
 
-# Run the MCP server
+load_token_from_claude_config() {
+  local config_path="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+  local token=""
+
+  if [ -f "$config_path" ] && command -v jq >/dev/null 2>&1; then
+    token=$(jq -r '.mcpServers.zoom.env.ZOOM_ACCESS_TOKEN // empty' "$config_path" 2>/dev/null || true)
+  fi
+
+  if [ -n "$token" ] && [ "$token" != "null" ]; then
+    export ZOOM_ACCESS_TOKEN="$token"
+  fi
+}
+
+is_token_expired() {
+  if [ -z "${ZOOM_ACCESS_TOKEN:-}" ]; then
+    return 0
+  fi
+
+  if ! command -v python3 >/dev/null 2>&1; then
+    # If we cannot validate, force renewal for safety.
+    return 0
+  fi
+
+  python3 - "$ZOOM_ACCESS_TOKEN" <<'PY'
+import base64
+import json
+import sys
+import time
+
+token = sys.argv[1]
+try:
+    parts = token.split('.')
+    if len(parts) != 3:
+        sys.exit(0)
+    payload = parts[1]
+    padding = '=' * (-len(payload) % 4)
+    data = base64.urlsafe_b64decode(payload + padding)
+    claims = json.loads(data)
+    exp = int(claims.get('exp', 0))
+    now = int(time.time())
+    # Exit 0 => expired, Exit 1 => not expired
+    sys.exit(0 if exp <= now else 1)
+except Exception:
+    sys.exit(0)
+PY
+}
+
+ensure_claude_running() {
+  if pgrep -x "$CLAUDE_APP_NAME" >/dev/null 2>&1; then
+    log "✅ Claude Desktop is running"
+    return
+  fi
+
+  log "⚠️  Claude Desktop is not running - opening it now..."
+  if [ -x "$DIR/scripts/restart_claude_app.sh" ]; then
+    bash "$DIR/scripts/restart_claude_app.sh" || true
+  else
+    open -a "$CLAUDE_APP_NAME" >/dev/null 2>&1 || true
+  fi
+
+  if pgrep -x "$CLAUDE_APP_NAME" >/dev/null 2>&1; then
+    log "✅ Claude Desktop opened"
+  else
+    log "⚠️  Could not verify Claude Desktop startup"
+  fi
+}
+
+maybe_refresh_expired_token() {
+  load_env
+
+  if [ -z "${ZOOM_ACCESS_TOKEN:-}" ]; then
+    load_token_from_claude_config
+  fi
+
+  if [ "$FORCE_REFRESH" -eq 1 ]; then
+    log "🔄 Force refresh enabled - fetching a new token..."
+    bash "$DIR/scripts/get_zoom_token.sh" -f
+    load_env
+  elif is_token_expired; then
+    log "🔄 Zoom token is expired (or missing). Fetching a new token..."
+    bash "$DIR/scripts/get_zoom_token.sh" -f
+    load_env
+  else
+    log "✅ Zoom token is still valid. No refresh needed."
+  fi
+
+  if [ -z "${ZOOM_ACCESS_TOKEN:-}" ]; then
+    log "❌ ZOOM_ACCESS_TOKEN is still missing after refresh attempt."
+    exit 1
+  fi
+
+  export ZOOM_ACCESS_TOKEN
+}
+
+ensure_claude_running
+maybe_refresh_expired_token
+
+log "🚀 Starting Zoom MCP server..."
 exec node "$DIR/index.js"
