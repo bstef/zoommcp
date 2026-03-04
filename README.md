@@ -8,7 +8,9 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
 - **Smart Token Management**: Checks existing tokens before fetching new ones (avoids unnecessary API calls)
 - **Enhanced User Experience**: Clear emoji-based status messages and time displayed in minutes for easy reading
 - **Automatic Token Refresh**: When running, the MCP server monitors token expiration and automatically refreshes when expiring soon (within 5 minutes, configurable)
-- **Token Expiration Countdown**: Periodic display in terminal showing when your access token expires (updates every 60 seconds, configurable)
+- **Token Expiration Monitoring**: Periodic display in terminal showing when your access token expires with visual separators and color-coded status (updates every 60 seconds, configurable)
+- **Reliable Claude App Detection**: Multi-method startup verification ensures Claude Desktop is fully running before server starts (up to 15 retries with multiple detection methods)
+- **Smart Zoom Sign-In**: Detects if you're already logged in to Zoom and only prompts for sign-in if needed
 - **One-Command Setup**: Single script handles token fetch, config update, Claude restart, and server startup
 - **Production Ready**: Comprehensive error handling, logging support, and cross-platform compatibility
 
@@ -71,7 +73,7 @@ When you run `./run.sh`, you'll see output like this:
 📱 Launching Claude...
 ✓ Launch command succeeded
 ⏳ Waiting for Claude to start...
-✅ Successfully started Claude
+✅ Successfully started Claude (found process)
 ✓ Launch completed
 Opening Zoom meetings page...
 
@@ -86,9 +88,17 @@ Opening Zoom meetings page...
    1. Open Claude Desktop manually
    2. The MCP server will connect automatically
 
-🔑 Zoom Token Status: Expires in 57m 29s at 1:51:23 PM
-Zoom MCP Server running on stdio
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Zoom MCP Server is running on stdio
+🔄 Token monitoring active - updates every 60 seconds
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔑 Token Status: ✅ Expires in 57m 29s (at 1:51:23 PM)
 ```
+
+Every 60 seconds, you'll see a periodic token status update with visual separators. The status indicator changes based on token expiration:
+- **✅** Fresh token (>15 minutes remaining)
+- **📊** Token expiring soon (5-15 minutes remaining)
+- **⚠️** Token expiring very soon (<5 minutes) - auto-refresh triggers
 
 The server is now running and Claude Desktop can access your Zoom account!
 
@@ -102,7 +112,7 @@ All shell scripts are located in the `scripts/` folder for better organization.
 | **`scripts/get_zoom_token.sh`** | Smart token fetcher that checks for existing valid tokens first. Only fetches from Zoom API if current token is expired/missing. Shows full token with enhanced visual feedback (🔄 🔍 ✅ ⚠️ ❌). Supports `-f` flag to skip validation and force fetch |
 | **`scripts/check_zoom_token.sh`** | Validates current token by checking JWT expiration. Displays time remaining in minutes. Enhanced messaging with emojis for all statuses (✅ ⏰ ❌ 🔍) |
 | **`scripts/update_claude_config.sh`** | Injects `ZOOM_ACCESS_TOKEN` into Claude Desktop config file |
-| **`scripts/restart_claude_app.sh`** | Restarts Claude Desktop if running, or opens it if not running (macOS) |
+| **`scripts/restart_claude_app.sh`** | Restarts Claude Desktop if running, or opens it if not running. Includes smart startup verification with multiple detection methods (up to 15 retries) to ensure Claude is fully running before proceeding |
 
 ### Token Validation Details
 
@@ -148,9 +158,18 @@ CLAUDE_MCP_SERVER_NAME      # Override MCP server name (default: "zoom")
 CLAUDE_ZOOM_ENV_KEY         # Override env variable name (default: "ZOOM_ACCESS_TOKEN")
 ZOOM_TOKEN_THRESHOLD        # Token refresh threshold in seconds (default: 60)
 ZOOM_AUTO_REFRESH_THRESHOLD # Seconds before token expires to auto-refresh (default: 300, or 5 minutes)
-ZOOM_TOKEN_DISPLAY_INTERVAL # How often to display token expiration countdown in seconds (default: 60)
+ZOOM_TOKEN_DISPLAY_INTERVAL # How often to display token status updates in seconds (default: 60)
 ZOOM_CHECK_VERBOSE          # Enable verbose logging (set to any non-empty value)
 ZOOM_CHECK_LOGFILE          # Log file path (default: ./logs/zoom_token.log)
+```
+
+**Customizing Token Monitoring:**
+```bash
+# Display token status every 30 seconds
+ZOOM_TOKEN_DISPLAY_INTERVAL=30 ./run.sh
+
+# Display token status every 2 minutes
+ZOOM_TOKEN_DISPLAY_INTERVAL=120 ./run.sh
 ```
 
 ## Claude Desktop Configuration
