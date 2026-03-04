@@ -24,9 +24,18 @@
 
 # 2. Launch system (30 sec)  
 ./run.sh
-
-# 3. Talk to Claude (3 min)
 ```
+
+**What You'll See:**
+```
+✅ VALID: Token expires at 2026-03-04 13:51:23 (57m remaining)
+🔍 Checking Claude Desktop status...
+✅ Successfully started Claude
+🔑 Zoom Token Status: Expires in 57m 29s at 1:51:23 PM
+Zoom MCP Server running on stdio
+```
+
+**Point out:** "Look at those emojis - instant status feedback!"
 
 ### Claude Commands:
 1. *"Show my upcoming Zoom meetings"*

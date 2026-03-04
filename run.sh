@@ -45,16 +45,26 @@ load_env
 
 restart_or_open_claude() {
   echo "Ensuring Claude Desktop is running (restart if open, launch if closed)..."
-  ./restart_claude_app.sh
+  if ./restart_claude_app.sh; then
+    echo "✓ Claude Desktop operation completed"
+  else
+    echo "⚠️  Claude Desktop operation had issues (see above)"
+    echo "   Continuing anyway - you may need to start Claude manually"
+  fi
 }
 
 ensure_claude_open_if_needed() {
   local app_name="${CLAUDE_APP_NAME:-Claude}"
   if pgrep -x "${app_name}" >/dev/null 2>&1; then
-    echo "${app_name} is already running."
+    echo "✓ ${app_name} is already running"
   else
-    echo "${app_name} is not running. Opening it now..."
-    ./restart_claude_app.sh
+    echo "⚠️  ${app_name} is not running. Attempting to open..."
+    if ./restart_claude_app.sh; then
+      echo "✓ Launch completed"
+    else
+      echo "⚠️  Could not launch ${app_name}"
+      echo "   Please start Claude Desktop manually"
+    fi
   fi
 }
 
@@ -153,4 +163,9 @@ open_zoom
 echo ""
 echo "🚀 Starting Zoom MCP Server..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "💡 Note: If Claude Desktop didn't start automatically:"
+echo "   1. Open Claude Desktop manually"
+echo "   2. The MCP server will connect automatically"
+echo ""
 node index.js

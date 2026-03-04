@@ -56,6 +56,39 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
    - Restart Claude Desktop app if running (or launch it if not running) when token/config changes
    - Ensure Claude Desktop is open before starting the MCP server
 
+### Sample Output
+
+When you run `./run.sh`, you'll see output like this:
+
+```
+✅ VALID: Token expires at 2026-03-04 13:51:23 (57m remaining)
+⚠️  Claude is not running. Attempting to open...
+🔍 Checking Claude Desktop status...
+   Looking for app: Claude
+   ✓ Found at: /Applications/Claude.app
+ℹ️  Claude is not running
+🚀 Claude is not running. Launching it now...
+📱 Launching Claude...
+✓ Launch command succeeded
+⏳ Waiting for Claude to start...
+✅ Successfully started Claude
+✓ Launch completed
+Opening Zoom meetings page...
+Please sign in with your Google email (benjaminstef.com) in the browser.
+
+🚀 Starting Zoom MCP Server...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Note: If Claude Desktop didn't start automatically:
+   1. Open Claude Desktop manually
+   2. The MCP server will connect automatically
+
+🔑 Zoom Token Status: Expires in 57m 29s at 1:51:23 PM
+Zoom MCP Server running on stdio
+```
+
+The server is now running and Claude Desktop can access your Zoom account!
+
 ## Scripts Reference
 
 | Script | Purpose |
@@ -312,8 +345,31 @@ zoommcp/
 ├── check_zoom_token.sh        # Token validator
 ├── update_claude_config.sh    # Claude config updater
 ├── restart_claude_app.sh      # Claude app restarter
-└── logs/                      # Optional log directory
+├── logs/                      # Optional log directory
+└── docs/                      # Documentation and presentation materials
+    ├── ABOUT.txt              # Project overview (quick reference)
+    ├── PRESENTATION.md        # Full presentation deck for stakeholders
+    ├── EXECUTIVE_SUMMARY.md   # One-page overview for executives
+    ├── SPEAKER_NOTES.md       # Detailed presentation guidance
+    ├── QUICK_REFERENCE.md     # Cheat sheet for demos
+    ├── PRESENTATION_CHECKLIST.md  # Day-of presentation guide
+    └── PRESENTATION_INDEX.md  # Documentation navigation guide
 ```
+
+## Additional Documentation
+
+For presentations, detailed guides, and executive summaries, see the **[docs/](docs/)** folder:
+
+- **[docs/ABOUT.txt](docs/ABOUT.txt)** - Quick project overview with key concepts
+- **[docs/PRESENTATION.md](docs/PRESENTATION.md)** - Complete slide deck for presenting to management
+- **[docs/EXECUTIVE_SUMMARY.md](docs/EXECUTIVE_SUMMARY.md)** - One-page summary for executives
+- **[docs/PRESENTATION_INDEX.md](docs/PRESENTATION_INDEX.md)** - Guide to using all presentation materials
+
+Perfect for:
+- 🎯 Presenting the project to stakeholders
+- 📊 Executive briefings
+- 🎤 Live demos and walkthroughs
+- 📚 Team onboarding
 
 ## Contributing
 

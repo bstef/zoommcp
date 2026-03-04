@@ -85,6 +85,11 @@
 2. **Launch the system** (30 sec)
    - Run `./run.sh`
    - Point out: "Opens my meetings page, everything automated"
+   - **Call out what you see:**
+     - "✅ Token validated - still good for 57 minutes"
+     - "🔍 Checks if Claude is running"
+     - "✅ Claude launched successfully"
+     - "🔑 Server shows when token expires"
    - Show the emoji status messages
    - *This demonstrates polish*
 

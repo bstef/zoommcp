@@ -125,7 +125,20 @@ CLOSING ASK (30 sec)
 # Terminal commands (memorize this order):
 1. ./get_zoom_token.sh       # Shows smart validation
 2. ./run.sh                   # Launches everything
+```
 
+**Expected Output from ./run.sh:**
+```
+✅ VALID: Token expires at 2026-03-04 13:51:23 (57m remaining)
+🔍 Checking Claude Desktop status...
+✅ Successfully started Claude
+🔑 Zoom Token Status: Expires in 57m 29s at 1:51:23 PM
+Zoom MCP Server running on stdio
+```
+
+**What to highlight:** The emoji status indicators show it's working!
+
+```bash
 # Claude commands (memorize these):
 3. "Show my upcoming Zoom meetings"
 4. "Create a Zoom meeting called 'Q2 Planning' for tomorrow at 2pm, 45 minutes"

@@ -110,6 +110,16 @@
    ```bash
    ./run.sh
    ```
+   
+   **Expected Output:**
+   ```
+   ✅ VALID: Token expires at 2026-03-04 13:51:23 (57m remaining)
+   🔍 Checking Claude Desktop status...
+   ✅ Successfully started Claude
+   🔑 Zoom Token Status: Expires in 57m 29s at 1:51:23 PM
+   Zoom MCP Server running on stdio
+   ```
+   
    *Demonstrate: Opens browser, manages tokens, launches Claude*
 
 3. **Natural Language Queries** (3 min)

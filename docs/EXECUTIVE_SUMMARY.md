@@ -59,6 +59,16 @@ User → Claude Desktop → MCP Server → Zoom API
 
 **Key Innovation:** Smart token validation avoids unnecessary API calls
 
+**What You See When Running:**
+```
+✅ VALID: Token expires at 2026-03-04 13:51:23 (57m remaining)
+✅ Successfully started Claude
+🔑 Zoom Token Status: Expires in 57m 29s at 1:51:23 PM
+Zoom MCP Server running on stdio
+```
+
+Clear status updates with emoji feedback at every step.
+
 ---
 
 ## 📈 Metrics & ROI

@@ -63,6 +63,24 @@ GETTING STARTED
   3. Run: ./run.sh
   4. Ask Claude about your meetings!
 
+WHAT YOU'LL SEE
+
+When you run ./run.sh, the system will:
+  
+  ✅ Validate your access token (or fetch new one)
+  🔍 Check and launch Claude Desktop if needed
+  🌐 Open Zoom meetings page in your browser
+  🔑 Display token expiration countdown
+  🚀 Start the MCP server
+
+Output looks like:
+  "✅ VALID: Token expires at 2026-03-04 13:51:23 (57m remaining)"
+  "✅ Successfully started Claude"
+  "🔑 Zoom Token Status: Expires in 57m 29s at 1:51:23 PM"
+  "Zoom MCP Server running on stdio"
+
+Now talk to Claude about your Zoom meetings!
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 UNDER THE HOOD
