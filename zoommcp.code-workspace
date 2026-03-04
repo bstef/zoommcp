@@ -1,8 +1,18 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"path": ".",
+			"name": "Zoom MCP"
+		},
+		{
+			"path": "/Users/bstef/Library/Application Support/Claude",
+			"name": "Claude Config"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.exclude": {
+			"**/.git": true,
+			"**/node_modules": true
+		}
+	}
 }
