@@ -16,6 +16,27 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Logging utility
+const LOG_FILE = path.join(__dirname, "logs", "mcp.log");
+function ensureLogDir() {
+  const logDir = path.dirname(LOG_FILE);
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+  }
+}
+function logEvent(message) {
+  try {
+    ensureLogDir();
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const logLine = `[${timestamp}] ${message}\n`;
+    fs.appendFileSync(LOG_FILE, logLine);
+    // Also log to stderr for terminal visibility
+    console.error(message);
+  } catch (e) {
+    console.error("Failed to write to log:", e.message);
+  }
+}
+
 // Zoom API configuration
 const ZOOM_API_BASE = "https://api.zoom.us/v2";
 let accessToken = null;
@@ -83,7 +104,7 @@ function displayTokenStatus() {
     const expirationMs = parseTokenExpiration(token);
     
     if (!expirationMs) {
-      console.error("⚠️  Could not determine token expiration time");
+      logEvent("⚠️  Could not determine token expiration time");
       return;
     }
     
@@ -101,9 +122,10 @@ function displayTokenStatus() {
     }
     
     const expireTime = expirationDate.toLocaleTimeString();
-    console.error(`🔑 Token Status: ${statusIcon} Expires in ${timeRemaining} (at ${expireTime})`);
+    const msg = `🔑 Token Status: ${statusIcon} Expires in ${timeRemaining} (at ${expireTime})`;
+    logEvent(msg);
   } catch (error) {
-    console.error("Error displaying token status:", error.message);
+    logEvent("Error displaying token status: " + error.message);
   }
 }
 
@@ -171,14 +193,14 @@ async function performAutoTokenRefresh() {
   const now = Date.now();
   if (now - lastRefreshAttemptTime < REFRESH_COOLDOWN_MS) {
     const waitTime = Math.ceil((REFRESH_COOLDOWN_MS - (now - lastRefreshAttemptTime)) / 1000);
-    console.error(`⏱️  Refresh attempt in progress. Please wait ${waitTime}s...`);
+    logEvent(`⏱️  Refresh attempt in progress. Please wait ${waitTime}s...`);
     return;
   }
   
   // Check if we've exceeded max failures
   if (consecutiveRefreshFailures >= MAX_CONSECUTIVE_FAILURES) {
-    console.error("❌ Token refresh failed multiple times. Disabling auto-refresh.");
-    console.error("   Manual refresh required. Run: ./scripts/get_zoom_token.sh -f");
+    logEvent("❌ Token refresh failed multiple times. Disabling auto-refresh.");
+    logEvent("   Manual refresh required. Run: ./scripts/get_zoom_token.sh -f");
     return;
   }
   
@@ -186,8 +208,8 @@ async function performAutoTokenRefresh() {
   lastRefreshAttemptTime = now;
   
   try {
-    console.error("⏳ Token expiring soon! Automatically refreshing...");
-    console.error("📝 Running: get_zoom_token.sh");
+    logEvent("⏳ Token expiring soon! Automatically refreshing...");
+    logEvent("📝 Running: get_zoom_token.sh");
     
     // Run get_zoom_token.sh with absolute path and force flag to bypass validation
     const getTokenScript = path.join(__dirname, "scripts", "get_zoom_token.sh");
@@ -198,12 +220,12 @@ async function performAutoTokenRefresh() {
         env: process.env,
         maxBuffer: 10 * 1024 * 1024
       });
-      console.error("📋 Token fetched successfully");
+      logEvent("📋 Token fetched successfully");
     } catch (error) {
-      console.error("⚠️  Failed to get new token:");
-      console.error("   Error:", error.message);
-      if (error.stdout) console.error("   Output:", error.stdout.toString().trim());
-      if (error.stderr) console.error("   Stderr:", error.stderr.toString().trim());
+      logEvent("⚠️  Failed to get new token:");
+      logEvent("   Error: " + error.message);
+      if (error.stdout) logEvent("   Output: " + error.stdout.toString().trim());
+      if (error.stderr) logEvent("   Stderr: " + error.stderr.toString().trim());
       // Don't return early - let the catch block handle failure tracking
       throw error;
     }
@@ -212,7 +234,7 @@ async function performAutoTokenRefresh() {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // Reload token from .env
-    console.error("🔄 Loading new token from .env");
+    logEvent("🔄 Loading new token from .env");
     const oldToken = process.env.ZOOM_ACCESS_TOKEN || '';
     const oldTokenPreview = oldToken.substring(0, 20) + (oldToken.length > 20 ? '...' : '');
     
@@ -223,9 +245,9 @@ async function performAutoTokenRefresh() {
     const newTokenPreview = newToken.substring(0, 20) + (newToken.length > 20 ? '...' : '');
     
     if (newToken !== oldToken && newToken) {
-      console.error(`✅ Token updated: ${oldTokenPreview} → ${newTokenPreview}`);
+      logEvent(`✅ Token updated: ${oldTokenPreview} → ${newTokenPreview}`);
     } else if (!newToken) {
-      console.error("⚠️  WARNING: Token not found in environment. Attempting to read from .env file...");
+      logEvent("⚠️  WARNING: Token not found in environment. Attempting to read from .env file...");
       
       // Try reading directly from .env file
       try {
@@ -239,22 +261,22 @@ async function performAutoTokenRefresh() {
             if (fileToken && fileToken.length > 50) {
               process.env.ZOOM_ACCESS_TOKEN = fileToken;
               accessToken = null;
-              console.error(`✅ Token loaded from .env file: ${fileToken.substring(0, 20)}...`);
+              logEvent(`✅ Token loaded from .env file: ${fileToken.substring(0, 20)}...`);
             } else if (!fileToken) {
-              console.error("❌ ERROR: .env file is empty or corrupted for ZOOM_ACCESS_TOKEN");
+              logEvent("❌ ERROR: .env file is empty or corrupted for ZOOM_ACCESS_TOKEN");
             }
           } else {
-            console.error("❌ ERROR: Could not find ZOOM_ACCESS_TOKEN in .env file");
+            logEvent("❌ ERROR: Could not find ZOOM_ACCESS_TOKEN in .env file");
           }
         } else {
-          console.error("❌ ERROR: .env file does not exist");
+          logEvent("❌ ERROR: .env file does not exist");
         }
       } catch (e) {
-        console.error("⚠️  Could not read .env file:", e.message);
+        logEvent("⚠️  Could not read .env file: " + e.message);
       }
     }
     
-    console.error("⚙️  Running: update_claude_config.sh");
+    logEvent("⚙️  Running: update_claude_config.sh");
     
     // Run update_claude_config.sh with absolute path
     const updateConfigScript = path.join(__dirname, "scripts", "update_claude_config.sh");
@@ -265,10 +287,10 @@ async function performAutoTokenRefresh() {
         env: process.env
       });
     } catch (error) {
-      console.error("⚠️  Failed to update Claude config:", error.message);
+      logEvent("⚠️  Failed to update Claude config: " + error.message);
     }
     
-    console.error("🚀 Running: restart_claude_app.sh");
+    logEvent("🚀 Running: restart_claude_app.sh");
     
     // Run restart_claude_app.sh with absolute path
     const restartClaudeScript = path.join(__dirname, "scripts", "restart_claude_app.sh");
@@ -279,25 +301,25 @@ async function performAutoTokenRefresh() {
         env: process.env
       });
     } catch (error) {
-      console.error("⚠️  Failed to restart Claude:", error.message);
+      logEvent("⚠️  Failed to restart Claude: " + error.message);
     }
     
     // Final wait before displaying status to let Claude restart complete
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    console.error("✅ Token refresh complete! New token is now active.");
+    logEvent("✅ Token refresh complete! New token is now active.");
     displayTokenStatus();
     
     // Reset failure counter on successful refresh
     consecutiveRefreshFailures = 0;
   } catch (error) {
     consecutiveRefreshFailures++;
-    console.error("❌ Error during token refresh:", error.message);
-    console.error(`   Attempt ${consecutiveRefreshFailures}/${MAX_CONSECUTIVE_FAILURES}`);
+    logEvent("❌ Error during token refresh: " + error.message);
+    logEvent(`   Attempt ${consecutiveRefreshFailures}/${MAX_CONSECUTIVE_FAILURES}`);
     
     if (consecutiveRefreshFailures >= MAX_CONSECUTIVE_FAILURES) {
-      console.error("❌ CRITICAL: Max refresh failures reached. Auto-refresh disabled.");
-      console.error("   Please manually run: ./scripts/get_zoom_token.sh -f");
+      logEvent("❌ CRITICAL: Max refresh failures reached. Auto-refresh disabled.");
+      logEvent("   Please manually run: ./scripts/get_zoom_token.sh -f");
     }
   } finally {
     tokenRefreshInProgress = false;
@@ -830,13 +852,13 @@ async function main() {
             encoding: 'utf-8',
             env: process.env
           });
-          console.error("✅ Token updated");
+          logEvent("✅ Token updated");
         } catch (error) {
-          console.error("⚠️  Failed to update token:", error.message);
+          logEvent("⚠️  Failed to update token: " + error.message);
         }
       }
     } else {
-      console.error("✅ Claude Desktop is running - MCP server is active");
+      logEvent("✅ Claude Desktop is running - MCP server is active");
       displayTokenStatus();
       
       // Check if token needs refresh and trigger auto-refresh if so
@@ -850,10 +872,10 @@ async function main() {
   tokenDisplayTimer.unref();
   
   await server.connect(transport);
-  console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.error("✅ Zoom MCP Server is running on stdio");
-  console.error(`🔄 Token monitoring active - updates every ${updateInterval / 1000} seconds`);
-  console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  logEvent("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  logEvent("✅ Zoom MCP Server is running on stdio");
+  logEvent(`🔄 Token monitoring active - updates every ${updateInterval / 1000} seconds`);
+  logEvent("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 }
 
 main().catch((error) => {

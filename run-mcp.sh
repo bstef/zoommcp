@@ -7,9 +7,14 @@ set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_APP_NAME="${CLAUDE_APP_NAME:-Claude}"
 FORCE_REFRESH=0
+LOG_FILE="${LOG_FILE:-$DIR/logs/mcp.log}"
+mkdir -p "$(dirname "$LOG_FILE")"
 
 log() {
-  echo "$*" >&2
+  local message="$*"
+  local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+  echo "$message" >&2
+  printf "[%s] %s\n" "$timestamp" "$message" >> "$LOG_FILE"
 }
 
 usage() {
