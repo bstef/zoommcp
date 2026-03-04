@@ -55,7 +55,9 @@ if [ -n "${ZOOM_CHECK_VERBOSE:-}" ] && [ "$VERBOSE" -eq 0 ]; then
 fi
 
 # Logging: when verbose mode is enabled, append messages to a logfile
-LOG_FILE="${ZOOM_CHECK_LOGFILE:-./logs/zoom_token.log}"
+# Get project root (parent of scripts directory)
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)"
+LOG_FILE="${ZOOM_CHECK_LOGFILE:-$PROJECT_ROOT/logs/zoom_token.log}"
 if [ "$VERBOSE" -eq 1 ]; then
   mkdir -p "$(dirname "$LOG_FILE")"
 fi
