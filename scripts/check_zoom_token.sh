@@ -125,4 +125,3 @@ if [ "$VERBOSE" -eq 1 ]; then
 fi
 
 exit $status
-PY

@@ -155,14 +155,10 @@ echo "✅ Token received successfully"
 env_file="../.env"
 mkdir -p "$(dirname "$env_file")"
 
-# Use atomic write to handle iCloud files safely: write to temp, then move
-temp_env="${env_file}.tmp.$$"
-
-if [ -f "$env_file" ]; then
-  # Copy existing file, then update the token line using Python for safe handling
-  cp "$env_file" "$temp_env"
-  python3 /dev/stdin "$temp_env" "$access_token" << 'PYTHON_END'
-import sys, os
+# Create a Python script to safely update the .env file
+update_script=$(mktemp)
+cat > "$update_script" << 'PYTHON_END'
+import sys
 
 env_file = sys.argv[1]
 new_token = sys.argv[2]
@@ -190,22 +186,10 @@ if not found:
 with open(env_file, 'w') as f:
     f.writelines(output)
 PYTHON_END
-else
-  # Create new file with token
-  printf "ZOOM_ACCESS_TOKEN=\"%s\"\n" "$access_token" > "$temp_env"
-fi
 
-# Atomic move: replace original file with updated temp file
-if [ -f "$temp_env" ]; then
-  mv "$temp_env" "$env_file" || {
-    echo "❌ ERROR: Failed to write token to $env_file" >&2
-    rm -f "$temp_env"
-    exit 1
-  }
-else
-  echo "❌ ERROR: Failed to prepare token file" >&2
-  exit 1
-fi
+# Run the update script with the token
+python3 "$update_script" "$env_file" "$access_token"
+rm -f "$update_script"
 
 # Export the token into the current process environment for immediate use
 export ZOOM_ACCESS_TOKEN="$access_token"
