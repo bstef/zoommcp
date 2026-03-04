@@ -85,9 +85,19 @@ function displayTokenStatus() {
     
     const expirationDate = new Date(expirationMs);
     const timeRemaining = formatTimeRemaining(expirationMs);
-    const now = new Date();
+    const now = Date.now();
+    const remainingMs = expirationMs - now;
     
-    console.error(`🔑 Zoom Token Status: Expires in ${timeRemaining} at ${expirationDate.toLocaleTimeString()}`);
+    // Color-coded status based on remaining time
+    let statusIcon = "✅";
+    if (remainingMs < 300000) { // Less than 5 minutes
+      statusIcon = "⚠️ ";
+    } else if (remainingMs < 900000) { // Less than 15 minutes
+      statusIcon = "📊";
+    }
+    
+    const expireTime = expirationDate.toLocaleTimeString();
+    console.error(`🔑 Token Status: ${statusIcon} Expires in ${timeRemaining} (at ${expireTime})`);
   } catch (error) {
     console.error("Error displaying token status:", error.message);
   }
@@ -665,12 +675,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   
+  
   // Display initial token status
   displayTokenStatus();
   
   // Set up periodic token status display (every 60 seconds, configurable via env)
   const updateInterval = parseInt(process.env.ZOOM_TOKEN_DISPLAY_INTERVAL || "60") * 1000;
   const tokenDisplayTimer = setInterval(async () => {
+    console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     displayTokenStatus();
     
     // Check if token needs refresh and trigger auto-refresh if so
@@ -683,7 +695,10 @@ async function main() {
   tokenDisplayTimer.unref();
   
   await server.connect(transport);
-  console.error("Zoom MCP Server running on stdio");
+  console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.error("✅ Zoom MCP Server is running on stdio");
+  console.error(`🔄 Token monitoring active - updates every ${updateInterval / 1000} seconds`);
+  console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 }
 
 main().catch((error) => {
