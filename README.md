@@ -40,13 +40,18 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
 3. **Run the server** (handles everything automatically)
    ```bash
    chmod +x *.sh  # Make scripts executable (first time only)
-   ./run.sh
+   ./run.sh       # Normal run - only refreshes if token expired
+   ./run.sh -f    # Force new token fetch before starting
    ```
+   
+   **Options:**
+   - `-f, --force` - Force fetch a new token even if current one is valid
+   - `-h, --help`  - Show help message
    
    This script will:
    - Open your Zoom upcoming meetings page in your default browser
-   - Check if access token is expired
-   - Fetch a new token if needed
+   - Check if access token is expired (or skip if using `-f`)
+   - Fetch a new token if needed (or force fetch with `-f`)
    - Update Claude Desktop config
    - Restart Claude Desktop app if running (or launch it if not running) when token/config changes
    - Ensure Claude Desktop is open before starting the MCP server
@@ -55,8 +60,8 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
 
 | Script | Purpose |
 |--------|---------|
-| **`run.sh`** | Main entry point - opens Zoom upcoming meetings page, orchestrates token check, refresh, config update, Claude restart, and server startup |
-| **`get_zoom_token.sh`** | Smart token fetcher that checks for existing valid tokens first. Only fetches from Zoom API if current token is expired/missing. Shows full token with enhanced visual feedback (🔄 🔍 ✅ ⚠️ ❌) |
+| **`run.sh`** | Main entry point - opens Zoom upcoming meetings page, orchestrates token check, refresh, config update, Claude restart, and server startup. Supports `-f` flag to force new token fetch |
+| **`get_zoom_token.sh`** | Smart token fetcher that checks for existing valid tokens first. Only fetches from Zoom API if current token is expired/missing. Shows full token with enhanced visual feedback (🔄 🔍 ✅ ⚠️ ❌). Supports `-f` flag to skip validation and force fetch |
 | **`check_zoom_token.sh`** | Validates current token by checking JWT expiration. Displays time remaining in minutes. Enhanced messaging with emojis for all statuses (✅ ⏰ ❌ 🔍) |
 | **`update_claude_config.sh`** | Injects `ZOOM_ACCESS_TOKEN` into Claude Desktop config file |
 | **`restart_claude_app.sh`** | Restarts Claude Desktop if running, or opens it if not running (macOS) |

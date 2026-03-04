@@ -1,6 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Parse command line arguments
+FORCE_REFRESH=0
+
+usage() {
+  cat <<USAGE
+Usage: $0 [-f|--force] [-h|--help]
+  -f, --force    Force fetch a new token even if current one is valid
+  -h, --help     Show this help message
+USAGE
+  exit 0
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -f|--force)
+      FORCE_REFRESH=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage
+      ;;
+  esac
+done
+
 # Load .env if it exists
 if [ -f .env ]; then
   set -a
@@ -22,8 +50,11 @@ if [ -n "${ZOOM_ACCESS_TOKEN:-}" ]; then
   echo ""
 fi
 
-# Check if existing token is still valid
-if [ -n "${ZOOM_ACCESS_TOKEN:-}" ] && command -v python3 >/dev/null 2>&1; then
+# Check if existing token is still valid (skip if force refresh)
+if [ "$FORCE_REFRESH" -eq 1 ]; then
+  echo "🔄 Force refresh enabled - skipping token validation"
+  echo ""
+elif [ -n "${ZOOM_ACCESS_TOKEN:-}" ] && command -v python3 >/dev/null 2>&1; then
   echo "🔍 Checking existing token..."
   
   check_result=$(python3 - "$ZOOM_ACCESS_TOKEN" 2>/dev/null <<'PY'
@@ -126,3 +157,5 @@ echo ""
 echo "Token Length: ${#access_token} characters"
 echo ""
 echo "✅ All set! Token is ready to use."
+
+exit 0

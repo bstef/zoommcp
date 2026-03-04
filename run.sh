@@ -1,6 +1,38 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Parse command line arguments
+FORCE_REFRESH=0
+
+usage() {
+  cat <<USAGE
+Usage: $0 [-f|--force] [-h|--help]
+  -f, --force    Force fetch a new token even if current one is valid
+  -h, --help     Show this help message
+
+Examples:
+  $0              # Normal run - only refreshes if token expired
+  $0 -f           # Force new token then start server
+USAGE
+  exit 0
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -f|--force)
+      FORCE_REFRESH=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      echo "Unknown option: $1"
+      usage
+      ;;
+  esac
+done
+
 load_env() {
   if [ -f .env ]; then
     set -a
@@ -61,7 +93,17 @@ PY
 
 # 1) Refresh token + update config + restart Claude only if needed
 # Prefer the centralized check script when available
-if [ -x ./check_zoom_token.sh ]; then
+
+if [ "$FORCE_REFRESH" -eq 1 ]; then
+  echo "🔄 Force refresh requested - fetching new token..."
+  if ./get_zoom_token.sh -f; then
+    load_env
+    ./update_claude_config.sh
+    restart_or_open_claude
+  else
+    echo "❌ Failed to get new token. Continuing anyway..."
+  fi
+elif [ -x ./check_zoom_token.sh ]; then
   # Determine threshold and verbose flags from env
   threshold_arg=""
   verbose_arg=""
@@ -72,17 +114,25 @@ if [ -x ./check_zoom_token.sh ]; then
     verbose_arg="-v"
   fi
   if ! ./check_zoom_token.sh $threshold_arg $verbose_arg; then
-    ./get_zoom_token.sh
-    load_env
-    ./update_claude_config.sh
-    restart_or_open_claude
+    echo "⚠️  Token needs refresh. Fetching new token..."
+    if ./get_zoom_token.sh; then
+      load_env
+      ./update_claude_config.sh
+      restart_or_open_claude
+    else
+      echo "❌ Failed to get new token. Continuing with existing token (may cause API errors)..."
+    fi
   fi
 else
   if token_expired; then
-    ./get_zoom_token.sh
-    load_env
-    ./update_claude_config.sh
-    restart_or_open_claude
+    echo "⚠️  Token needs refresh. Fetching new token..."
+    if ./get_zoom_token.sh; then
+      load_env
+      ./update_claude_config.sh
+      restart_or_open_claude
+    else
+      echo "❌ Failed to get new token. Continuing with existing token (may cause API errors)..."
+    fi
   fi
 fi
 
@@ -100,4 +150,7 @@ open_zoom() {
 open_zoom
 
 # 4) Start MCP server (foreground)
+echo ""
+echo "🚀 Starting Zoom MCP Server..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 node index.js
