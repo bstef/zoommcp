@@ -102,6 +102,30 @@ Every 60 seconds, you'll see a periodic token status update with visual separato
 
 The server is now running and Claude Desktop can access your Zoom account!
 
+### Automatic Token Refresh Example
+
+While the server is running, if your token expires or is expiring soon (within 5 minutes), you'll see an automatic refresh happen:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔑 Token Status: ⚠️ Expires in 0s (at 1:51:23 PM)
+⏳ Token expiring soon! Automatically refreshing...
+📝 Running: get_zoom_token.sh
+📋 Token fetched successfully
+🔄 Loading new token from .env
+⚙️  Running: update_claude_config.sh
+🚀 Running: restart_claude_app.sh
+🔨 Force quitting Claude...
+⚠️  Claude may not have started properly after 15 seconds
+   Please check if the app is running manually
+   Continuing with script execution...
+✅ Token refresh complete! New token is now active.
+🔑 Token Status: ✅ Expires in 1h 0m (at 2:51:23 PM)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+This automatic refresh happens seamlessly without any action needed on your part. Your token and Claude Desktop config are automatically updated, and the server continues running without interruption.
+
 ## Scripts Reference
 
 All shell scripts are located in the `scripts/` folder for better organization.
