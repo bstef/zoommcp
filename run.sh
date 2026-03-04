@@ -4,10 +4,10 @@ set -euo pipefail
 # Display welcome banner
 display_banner() {
   cat <<'BANNER'
-╔══════════════════════════════════════════════════════════════════╗
-║                  🚀 ZOOM MCP SERVER 🚀                          ║
-║             Connect Claude with Your Zoom Meetings               ║
-╚══════════════════════════════════════════════════════════════════╝
+╔════════════════════════════════════════════════════════════════════╗
+║                  🚀 ZOOM MCP SERVER 🚀                            ║
+║             Connect Claude with Your Zoom Meetings                 ║
+╚════════════════════════════════════════════════════════════════════╝
 BANNER
 }
 
