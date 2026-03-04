@@ -74,7 +74,10 @@ When you run `./run.sh`, you'll see output like this:
 ✅ Successfully started Claude
 ✓ Launch completed
 Opening Zoom meetings page...
-Please sign in with your Google email (benjaminstef.com) in the browser.
+
+📝 If you're not already signed in:
+   → Sign in with your Google email (benjaminstef.com)
+   → If already authenticated, page will load your current meetings
 
 🚀 Starting Zoom MCP Server...
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

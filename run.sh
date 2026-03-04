@@ -153,7 +153,10 @@ ensure_claude_open_if_needed
 open_zoom() {
   echo "Opening Zoom meetings page..."
   open "https://us04web.zoom.us/meeting#/upcoming"
-  echo "Please sign in with your Google email (benjaminstef.com) in the browser."
+  echo ""
+  echo "📝 If you're not already signed in:"
+  echo "   → Sign in with your Google email (benjaminstef.com)"
+  echo "   → If already authenticated, page will load your current meetings"
 }
 
 # 3) Open Zoom in browser
