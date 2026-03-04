@@ -11,6 +11,21 @@ load_env() {
 
 load_env
 
+restart_or_open_claude() {
+  echo "Ensuring Claude Desktop is running (restart if open, launch if closed)..."
+  ./restart_claude_app.sh
+}
+
+ensure_claude_open_if_needed() {
+  local app_name="${CLAUDE_APP_NAME:-Claude}"
+  if pgrep -x "${app_name}" >/dev/null 2>&1; then
+    echo "${app_name} is already running."
+  else
+    echo "${app_name} is not running. Opening it now..."
+    ./restart_claude_app.sh
+  fi
+}
+
 # Check if token is missing/expired (JWT exp)
 token_expired() {
   if [ -z "${ZOOM_ACCESS_TOKEN:-}" ]; then
@@ -60,16 +75,19 @@ if [ -x ./check_zoom_token.sh ]; then
     ./get_zoom_token.sh
     load_env
     ./update_claude_config.sh
-    ./restart_claude_app.sh
+    restart_or_open_claude
   fi
 else
   if token_expired; then
     ./get_zoom_token.sh
     load_env
     ./update_claude_config.sh
-    ./restart_claude_app.sh
+    restart_or_open_claude
   fi
 fi
+
+# Ensure Claude is open even when no token refresh/restart was needed
+ensure_claude_open_if_needed
 
 # 2) Open Zoom in browser
 open_zoom() {
