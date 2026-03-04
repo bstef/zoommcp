@@ -31,10 +31,10 @@ done
 shift $((OPTIND-1))
 
 load_env() {
-  if [ -f .env ]; then
+  if [ -f ../.env ]; then
     set -a
     # shellcheck disable=SC1091
-    source .env
+    source ../.env
     set +a
   fi
 }

@@ -30,9 +30,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Load .env if it exists
-if [ -f .env ]; then
+if [ -f ../.env ]; then
   set -a
-  source .env
+  source ../.env
   set +a
 fi
 
@@ -131,7 +131,7 @@ fi
 echo "✅ Token received successfully"
 
 # Save token into .env (create or replace ZOOM_ACCESS_TOKEN)
-env_file=".env"
+env_file="../.env"
 touch "$env_file"
 
 # Use sed with | delimiter (macOS sed needs -i '') to safely replace if the key exists
