@@ -9,6 +9,12 @@ import {
 import axios from "axios";
 import { execSync } from "child_process";
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Get the directory of the current module (ES modules)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Zoom API configuration
 const ZOOM_API_BASE = "https://api.zoom.us/v2";
@@ -116,18 +122,24 @@ async function performAutoTokenRefresh() {
   tokenRefreshInProgress = true;
   
   try {
-    const scriptDir = process.cwd();
     console.error("⏳ Token expiring soon! Automatically refreshing...");
     console.error("📝 Running: get_zoom_token.sh");
     
-    // Run get_zoom_token.sh
+    // Run get_zoom_token.sh with absolute path
+    const getTokenScript = path.join(__dirname, "get_zoom_token.sh");
     try {
-      execSync("./get_zoom_token.sh", {
-        cwd: scriptDir,
-        stdio: ["pipe", "pipe", "pipe"],
+      const output = execSync(`bash "${getTokenScript}"`, {
+        cwd: __dirname,
+        encoding: 'utf-8',
+        env: process.env,
+        maxBuffer: 10 * 1024 * 1024
       });
+      console.error("📋 Token fetched successfully");
     } catch (error) {
-      console.error("⚠️  Failed to get new token:", error.message);
+      console.error("⚠️  Failed to get new token:");
+      console.error("   Error:", error.message);
+      if (error.stdout) console.error("   Output:", error.stdout.toString().trim());
+      if (error.stderr) console.error("   Stderr:", error.stderr.toString().trim());
       tokenRefreshInProgress = false;
       return;
     }
@@ -139,11 +151,13 @@ async function performAutoTokenRefresh() {
     
     console.error("⚙️  Running: update_claude_config.sh");
     
-    // Run update_claude_config.sh
+    // Run update_claude_config.sh with absolute path
+    const updateConfigScript = path.join(__dirname, "update_claude_config.sh");
     try {
-      execSync("./update_claude_config.sh", {
-        cwd: scriptDir,
-        stdio: ["pipe", "pipe", "pipe"],
+      execSync(`bash "${updateConfigScript}"`, {
+        cwd: __dirname,
+        encoding: 'utf-8',
+        env: process.env
       });
     } catch (error) {
       console.error("⚠️  Failed to update Claude config:", error.message);
@@ -151,11 +165,13 @@ async function performAutoTokenRefresh() {
     
     console.error("🚀 Running: restart_claude_app.sh");
     
-    // Run restart_claude_app.sh
+    // Run restart_claude_app.sh with absolute path
+    const restartClaudeScript = path.join(__dirname, "restart_claude_app.sh");
     try {
-      execSync("./restart_claude_app.sh", {
-        cwd: scriptDir,
-        stdio: ["pipe", "pipe", "pipe"],
+      execSync(`bash "${restartClaudeScript}"`, {
+        cwd: __dirname,
+        encoding: 'utf-8',
+        env: process.env
       });
     } catch (error) {
       console.error("⚠️  Failed to restart Claude:", error.message);
@@ -173,17 +189,20 @@ async function performAutoTokenRefresh() {
 // Load environment variables from .env file
 function loadEnvFile() {
   try {
-    if (fs.existsSync(".env")) {
-      const envContent = fs.readFileSync(".env", "utf-8");
+    const envPath = path.join(__dirname, ".env");
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, "utf-8");
       const lines = envContent.split("\n");
       
       for (const line of lines) {
         const trimmed = line.trim();
         if (trimmed && !trimmed.startsWith("#")) {
           const [key, ...valueParts] = trimmed.split("=");
-          const value = valueParts.join("=");
+          let value = valueParts.join("=");
           if (key && value) {
-            process.env[key.trim()] = value.trim();
+            // Remove quotes if present
+            value = value.trim().replace(/^["']|["']$/g, "");
+            process.env[key.trim()] = value;
           }
         }
       }
