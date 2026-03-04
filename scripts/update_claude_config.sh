@@ -21,6 +21,7 @@ if [ ! -f "$config_file" ]; then
   exit 1
 fi
 
+# Update the config file
 python3 - "$config_file" "$server_name" "$env_key" "$ZOOM_ACCESS_TOKEN" <<'PY'
 import json, sys
 
@@ -40,3 +41,24 @@ with open(path, "w", encoding="utf-8") as f:
 PY
 
 echo "✓ Updated $config_file with $env_key for MCP server '$server_name'"
+
+# Force Claude Desktop to reload the config by restarting it
+# This ensures the new token is picked up immediately when Claude loads the MCP server
+if pgrep -x "Claude" >/dev/null 2>&1; then
+  echo "🔄 Restarting Claude Desktop to load new configuration..."
+  
+  # Graceful quit first
+  osascript -e 'tell application "Claude" to quit' >/dev/null 2>&1 || true
+  sleep 1
+  
+  # If still running, force quit
+  if pgrep -x "Claude" >/dev/null 2>&1; then
+    pkill -9 -x "Claude" || true
+    sleep 1
+  fi
+  
+  # Relaunch Claude
+  open -a Claude >/dev/null 2>&1 || true
+  echo "✓ Claude Desktop restarted with new config"
+fi
+
