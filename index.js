@@ -114,6 +114,24 @@ function isClaudeRunning() {
   }
 }
 
+// Check if token is actually expired (not just expiring soon)
+function tokenIsExpired() {
+  try {
+    const token = getAccessToken();
+    const expirationMs = parseTokenExpiration(token);
+    
+    if (!expirationMs) {
+      return false;
+    }
+    
+    // Return true if token has already expired
+    const now = Date.now();
+    return expirationMs <= now;
+  } catch (error) {
+    return false;
+  }
+}
+
 // Check if token needs automatic refresh (expiring within threshold)
 function tokenNeedsRefresh() {
   try {
@@ -698,8 +716,46 @@ async function main() {
     // Check if Claude Desktop is still running
     const claudeRunning = isClaudeRunning();
     if (!claudeRunning) {
-      console.error("⚠️  Claude Desktop is not running - MCP server will not be available");
+      console.error("⚠️  Claude Desktop is not running - attempting to open it...");
       displayTokenStatus();
+      
+      // Launch Claude Desktop
+      const restartClaudeScript = path.join(__dirname, "scripts", "restart_claude_app.sh");
+      try {
+        execSync(`bash "${restartClaudeScript}"`, {
+          cwd: __dirname,
+          encoding: 'utf-8',
+          env: process.env
+        });
+        console.error("✅ Claude Desktop launched");
+      } catch (error) {
+        console.error("⚠️  Failed to launch Claude:", error.message);
+      }
+      
+      // Only update token if it has actually expired (not just expiring soon)
+      if (tokenIsExpired()) {
+        console.error("🔄 Token has expired - fetching new token...");
+        const getTokenScript = path.join(__dirname, "scripts", "get_zoom_token.sh");
+        try {
+          execSync(`bash "${getTokenScript}" -f`, {
+            cwd: __dirname,
+            encoding: 'utf-8',
+            env: process.env
+          });
+          loadEnvFile();
+          accessToken = null;
+          
+          const updateConfigScript = path.join(__dirname, "scripts", "update_claude_config.sh");
+          execSync(`bash "${updateConfigScript}"`, {
+            cwd: __dirname,
+            encoding: 'utf-8',
+            env: process.env
+          });
+          console.error("✅ Token updated");
+        } catch (error) {
+          console.error("⚠️  Failed to update token:", error.message);
+        }
+      }
     } else {
       console.error("✅ Claude Desktop is running - MCP server is active");
       displayTokenStatus();
