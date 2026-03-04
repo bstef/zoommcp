@@ -135,10 +135,10 @@ async function performAutoTokenRefresh() {
     console.error("⏳ Token expiring soon! Automatically refreshing...");
     console.error("📝 Running: get_zoom_token.sh");
     
-    // Run get_zoom_token.sh with absolute path
+    // Run get_zoom_token.sh with absolute path and force flag to bypass validation
     const getTokenScript = path.join(__dirname, "scripts", "get_zoom_token.sh");
     try {
-      const output = execSync(`bash "${getTokenScript}"`, {
+      const output = execSync(`bash "${getTokenScript}" -f`, {
         cwd: __dirname,
         encoding: 'utf-8',
         env: process.env,
