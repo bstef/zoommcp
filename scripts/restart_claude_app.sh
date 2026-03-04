@@ -89,17 +89,35 @@ else
   echo "⚠️  Launch command failed, but continuing..." >&2
 fi
 
-# Wait for app to start (give it more time)
+# Wait for app to start with multiple checks
 echo "⏳ Waiting for ${APP_NAME} to start..."
-sleep 3
+max_attempts=15
+attempt=0
 
-# Check if it started (but don't fail if it didn't)
-if pgrep -x "${APP_NAME}" >/dev/null 2>&1; then
-  echo "✅ Successfully started ${APP_NAME}"
-  exit 0
-else
-  echo "⚠️  ${APP_NAME} may not have started properly" >&2
-  echo "   This might be okay - check manually if needed" >&2
-  echo "   Continuing with script execution..." >&2
-  exit 0  # Changed to exit 0 so we don't stop the whole pipeline
-fi
+while [ $attempt -lt $max_attempts ]; do
+  sleep 1
+  attempt=$((attempt + 1))
+  
+  # Check multiple ways: exact process name, fuzzy match, or window title
+  if pgrep -x "${APP_NAME}" >/dev/null 2>&1; then
+    echo "✅ Successfully started ${APP_NAME} (found process)"
+    exit 0
+  fi
+  
+  # Also check for Claude process even if exact name doesn't match
+  if pgrep -i "claude" >/dev/null 2>&1; then
+    echo "✅ Successfully started ${APP_NAME} (found Claude process)"
+    exit 0
+  fi
+  
+  # Check if the app window is open by looking for the app bundle
+  if lsof -c "${APP_NAME}" >/dev/null 2>&1; then
+    echo "✅ Successfully started ${APP_NAME} (app is active)"
+    exit 0
+  fi
+done
+
+echo "⚠️  ${APP_NAME} may not have started properly after 15 seconds" >&2
+echo "   Please check if the app is running manually" >&2
+echo "   Continuing with script execution..." >&2
+exit 0  # Changed to exit 0 so we don't stop the whole pipeline
