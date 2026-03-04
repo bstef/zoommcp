@@ -5,9 +5,11 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
 ## Features
 
 - **9 Zoom API Tools**: Meeting management (list, create, update, delete), user management, participants, and recordings
-- **Smart Token Management**: Refreshes only when token is expired (or when force mode is used)
+- **Smart Token Management**: Refreshes only when token is expired (or when force mode is used); never redundantly re-fetches valid tokens
 - **Enhanced User Experience**: Clear emoji-based status messages and time displayed in minutes for easy reading
 - **Automatic Token Refresh**: When running, the MCP server monitors token expiration and automatically refreshes when expiring soon (within 5 minutes, configurable)
+- **Anti-Infinite-Loop Safeguards**: 30-second cooldown between refresh attempts and max 3 failures before disabling auto-refresh (prevents restart loops)
+- **Immediate Status Display**: Shows new token validity immediately after refresh (no 60-second wait)
 - **Token Expiration Monitoring**: Periodic display in terminal showing when your access token expires with visual separators and color-coded status (updates every 60 seconds, configurable)
 - **Reliable Claude App Detection**: Multi-method startup verification ensures Claude Desktop is fully running before server starts (up to 15 retries with multiple detection methods)
 - **Automatic Claude Recovery**: If Claude closes while running, the monitor detects it and attempts to reopen it
@@ -103,23 +105,25 @@ While the server is running, if your token expires or is expiring soon (within 5
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔑 Token Status: ⚠️ Expires in 0s (at 1:51:23 PM)
+🔑 Token Status: ⚠️ Expires in 2m 15s (at 2:58:31 PM)
 ⏳ Token expiring soon! Automatically refreshing...
 📝 Running: get_zoom_token.sh
 📋 Token fetched successfully
 🔄 Loading new token from .env
+✅ Token updated: eyJz...NTMz → eyJz...VjgT
 ⚙️  Running: update_claude_config.sh
 🚀 Running: restart_claude_app.sh
-🔨 Force quitting Claude...
-⚠️  Claude may not have started properly after 15 seconds
-   Please check if the app is running manually
-   Continuing with script execution...
 ✅ Token refresh complete! New token is now active.
-🔑 Token Status: ✅ Expires in 1h 0m (at 2:51:23 PM)
+🔑 Token Status: ✅ Expires in 59m 45s (at 3:58:05 PM)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-This automatic refresh happens seamlessly without any action needed on your part. The server continues running without interruption.
+This automatic refresh happens seamlessly without any action needed on your part. The server continues running without interruption. New token validity is shown immediately after refresh (no waiting for next 60s cycle).
+
+**Refresh Safety:**
+- Token refresh is throttled with a 30-second cooldown between attempts
+- If refresh fails 3 times consecutively, auto-refresh is disabled to prevent restart loops
+- Manual recovery: `./scripts/get_zoom_token.sh -f` to fetch a fresh token
 
 ## Scripts Reference
 
@@ -153,14 +157,18 @@ The token management system now includes smart validation:
 - **`get_zoom_token.sh`**: Smart fetcher that avoids unnecessary API calls
   - Checks for existing valid token **before** making API call
   - Only fetches new token if current one is expired/missing (>1 minute threshold)
+  - Uses atomic file writes (temp file + move) for safe .env updates on iCloud Drive
+  - Python token parsing with proper argument handling (no stdin shell interpolation issues)
   - Enhanced visual feedback:
     - 🔍 Checking existing token
     - ✅ Token still valid - using existing
     - 🔄 Requesting new token from API
-    - 💾 Token saved successfully
+    - 📋 Token fetched successfully
+    - 💾 Token saved to .env
     - ❌ Clear error messages for all failure cases
   - Displays **full token** (not just preview) for easy copying
   - Shows token length for validation
+  - Force mode (`-f`) bypasses validation and always fetches new token
 
 ### Environment Variables
 
@@ -344,20 +352,46 @@ The server communicates via stdio and will output:
 ### Automatic Token Refresh
 - While the MCP server is running, it monitors token expiration in the background
 - When the token is expiring within 5 minutes (configurable), the server automatically:
-  1. Fetches a new token via `get_zoom_token.sh`
-  2. Updates the Claude Desktop config
-  3. Restarts Claude Desktop
-  4. Continues serving with the new token (seamless to Claude)
+  1. Fetches a new token via `get_zoom_token.sh` (with iCloud-safe atomic writes)
+  2. Loads the new token into memory from `.env` file
+  3. Updates the Claude Desktop config JSON
+  4. Restarts Claude Desktop to pick up new token
+  5. Displays new token validity immediately (no 60-second wait)
+  6. Continues serving with the new token (seamless to Claude)
+- **Anti-Loop Protection:**
+  - 30-second cooldown between refresh attempts (prevents rapid cycling)
+  - Auto-refresh disabled after 3 consecutive failures
+  - Manual recovery: `./scripts/get_zoom_token.sh -f`
 - Watch the terminal for messages like:
   - `⏳ Token expiring soon! Automatically refreshing...`
-  - `✅ Token refresh complete! New token is now active.`
+  - `🔄 Loading new token from .env`
+  - `✅ Token updated: [old_preview] → [new_preview]`
+  - `🔑 Token Status: ✅ Expires in 59m 45s (at HH:MM:SS)`
 - Customize the refresh threshold with `ZOOM_AUTO_REFRESH_THRESHOLD=600` (in seconds; default: 300 = 5 minutes)
 - No manual intervention needed — this happens automatically while the server runs
 
 ### Permission Denied on Scripts
 ```bash
 chmod +x *.sh  # Make all shell scripts executable
+chmod +x scripts/*.sh  # Also for scripts subdirectory
 ```
+
+### Token Not Updating in .env
+- Fixed: `get_zoom_token.sh` now uses Python with proper argument handling
+- Uses atomic writes (temp file → atomic move) for safe iCloud Drive updates
+- Verify token was written: `grep ZOOM_ACCESS_TOKEN .env | wc -c` (should be >600 chars)
+- If still not updating, check file permissions: `ls -l .env`
+
+### Token Validation Fails
+- **Issue**: `check_zoom_token.sh` shows token as expired even after refresh
+- **Cause**: Old token still in environment or Python parsing issue
+- **Fix**: `source .env && ./scripts/check_zoom_token.sh` (reload environment)
+- Verify token in .env: `grep ZOOM_ACCESS_TOKEN .env | grep -o 'ey[A-Za-z0-9]*' | wc -c` (>100 chars)
+
+### Stuck in Auto-Refresh Loop
+- **Fixed**: Server now has 30-second cooldown and max 3 failures before disabling auto-refresh
+- If stuck, look for: `CRITICAL: Max refresh failures reached. Auto-refresh disabled.`
+- Manual fix: `./scripts/get_zoom_token.sh -f && bash scripts/update_claude_config.sh`
 
 ### Python3 Not Found
 - macOS/Linux: Usually pre-installed, try `python3 --version`
