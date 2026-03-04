@@ -45,7 +45,7 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
    - Check if access token is expired
    - Fetch a new token if needed
    - Update Claude Desktop config
-   - Restart Claude Desktop app
+  - Restart Claude Desktop app if running (or launch it if not running)
    - Start the MCP server
 
 ## Scripts Reference
@@ -56,7 +56,7 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
 | **`get_zoom_token.sh`** | Fetches a new Zoom access token using Server-to-Server OAuth and saves it to `.env` |
 | **`check_zoom_token.sh`** | Validates current token by checking JWT expiration claim (exits 0 if valid, 1 if expired/missing) |
 | **`update_claude_config.sh`** | Injects `ZOOM_ACCESS_TOKEN` into Claude Desktop config file |
-| **`restart_claude_app.sh`** | Restarts the Claude Desktop app on macOS |
+| **`restart_claude_app.sh`** | Restarts Claude Desktop if running, or opens it if not running (macOS) |
 
 ### Token Validation Details
 
@@ -211,6 +211,11 @@ Zoom MCP Server running on stdio
 - Verify the `args` path in config points to your `index.js` file (use absolute path)
 - Restart Claude Desktop after config changes
 - Check Claude Desktop logs: `~/Library/Logs/Claude/mcp*.log`
+
+### Claude App Launch Behavior
+- `./restart_claude_app.sh` now checks whether Claude is running first
+- If Claude is running, it performs a restart
+- If Claude is not running, it opens Claude automatically
 
 ### Permission Denied on Scripts
 ```bash
