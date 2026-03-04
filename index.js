@@ -7,10 +7,14 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import axios from "axios";
+import { execSync } from "child_process";
+import fs from "fs";
 
 // Zoom API configuration
 const ZOOM_API_BASE = "https://api.zoom.us/v2";
 let accessToken = null;
+let tokenRefreshInProgress = false;
+let tokenCheckInterval = null;
 
 // Initialize access token from environment
 function getAccessToken() {
@@ -80,6 +84,112 @@ function displayTokenStatus() {
     console.error(`🔑 Zoom Token Status: Expires in ${timeRemaining} at ${expirationDate.toLocaleTimeString()}`);
   } catch (error) {
     console.error("Error displaying token status:", error.message);
+  }
+}
+
+// Check if token needs automatic refresh (expiring within threshold)
+function tokenNeedsRefresh() {
+  try {
+    const token = getAccessToken();
+    const expirationMs = parseTokenExpiration(token);
+    
+    if (!expirationMs) {
+      return false;
+    }
+    
+    // Check if token expires within the threshold (default: 5 minutes)
+    const refreshThresholdMs = (parseInt(process.env.ZOOM_AUTO_REFRESH_THRESHOLD || "300")) * 1000;
+    const now = Date.now();
+    
+    return (expirationMs - now) < refreshThresholdMs;
+  } catch (error) {
+    return false;
+  }
+}
+
+// Automatically refresh token, update config, and restart Claude
+async function performAutoTokenRefresh() {
+  if (tokenRefreshInProgress) {
+    return; // Prevent concurrent refresh attempts
+  }
+  
+  tokenRefreshInProgress = true;
+  
+  try {
+    const scriptDir = process.cwd();
+    console.error("⏳ Token expiring soon! Automatically refreshing...");
+    console.error("📝 Running: get_zoom_token.sh");
+    
+    // Run get_zoom_token.sh
+    try {
+      execSync("./get_zoom_token.sh", {
+        cwd: scriptDir,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+    } catch (error) {
+      console.error("⚠️  Failed to get new token:", error.message);
+      tokenRefreshInProgress = false;
+      return;
+    }
+    
+    // Reload token from .env
+    console.error("🔄 Loading new token from .env");
+    loadEnvFile();
+    accessToken = null; // Clear cached token to force reload
+    
+    console.error("⚙️  Running: update_claude_config.sh");
+    
+    // Run update_claude_config.sh
+    try {
+      execSync("./update_claude_config.sh", {
+        cwd: scriptDir,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+    } catch (error) {
+      console.error("⚠️  Failed to update Claude config:", error.message);
+    }
+    
+    console.error("🚀 Running: restart_claude_app.sh");
+    
+    // Run restart_claude_app.sh
+    try {
+      execSync("./restart_claude_app.sh", {
+        cwd: scriptDir,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+    } catch (error) {
+      console.error("⚠️  Failed to restart Claude:", error.message);
+    }
+    
+    console.error("✅ Token refresh complete! New token is now active.");
+    displayTokenStatus();
+  } catch (error) {
+    console.error("❌ Error during token refresh:", error.message);
+  } finally {
+    tokenRefreshInProgress = false;
+  }
+}
+
+// Load environment variables from .env file
+function loadEnvFile() {
+  try {
+    if (fs.existsSync(".env")) {
+      const envContent = fs.readFileSync(".env", "utf-8");
+      const lines = envContent.split("\n");
+      
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith("#")) {
+          const [key, ...valueParts] = trimmed.split("=");
+          const value = valueParts.join("=");
+          if (key && value) {
+            process.env[key.trim()] = value.trim();
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error loading .env file:", error.message);
   }
 }
 
@@ -541,8 +651,13 @@ async function main() {
   
   // Set up periodic token status display (every 60 seconds, configurable via env)
   const updateInterval = parseInt(process.env.ZOOM_TOKEN_DISPLAY_INTERVAL || "60") * 1000;
-  const tokenDisplayTimer = setInterval(() => {
+  const tokenDisplayTimer = setInterval(async () => {
     displayTokenStatus();
+    
+    // Check if token needs refresh and trigger auto-refresh if so
+    if (tokenNeedsRefresh()) {
+      await performAutoTokenRefresh();
+    }
   }, updateInterval);
   
   // Ensure timer doesn't prevent process from exiting

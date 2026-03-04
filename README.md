@@ -6,6 +6,7 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
 
 - **9 Zoom API Tools**: Meeting management (list, create, update, delete), user management, participants, and recordings
 - **Automatic Token Management**: JWT-based token validation with smart refresh (only when expired)
+- **Automatic Token Refresh**: When running, the MCP server monitors token expiration and automatically refreshes when expiring soon (within 5 minutes, configurable)
 - **Token Expiration Countdown**: Periodic display in terminal showing when your access token expires (updates every 60 seconds, configurable)
 - **One-Command Setup**: Single script handles token fetch, config update, Claude restart, and server startup
 - **Production Ready**: Comprehensive error handling, logging support, and cross-platform compatibility
@@ -83,6 +84,7 @@ CLAUDE_CONFIG_FILE          # Override Claude config path (default: macOS standa
 CLAUDE_MCP_SERVER_NAME      # Override MCP server name (default: "zoom")
 CLAUDE_ZOOM_ENV_KEY         # Override env variable name (default: "ZOOM_ACCESS_TOKEN")
 ZOOM_TOKEN_THRESHOLD        # Token refresh threshold in seconds (default: 60)
+ZOOM_AUTO_REFRESH_THRESHOLD # Seconds before token expires to auto-refresh (default: 300, or 5 minutes)
 ZOOM_TOKEN_DISPLAY_INTERVAL # How often to display token expiration countdown in seconds (default: 60)
 ZOOM_CHECK_VERBOSE          # Enable verbose logging (set to any non-empty value)
 ZOOM_CHECK_LOGFILE          # Log file path (default: ./logs/zoom_token.log)
@@ -224,6 +226,19 @@ Zoom MCP Server running on stdio
 - This countdown updates periodically (every 60 seconds by default)
 - Customize the update frequency with `ZOOM_TOKEN_DISPLAY_INTERVAL=30` (in seconds)
 - Use `ZOOM_TOKEN_DISPLAY_INTERVAL=0` to disable the periodic countdown display
+
+### Automatic Token Refresh
+- While the MCP server is running, it monitors token expiration in the background
+- When the token is expiring within 5 minutes (configurable), the server automatically:
+  1. Fetches a new token via `get_zoom_token.sh`
+  2. Updates the Claude Desktop config
+  3. Restarts Claude Desktop
+  4. Continues serving with the new token (seamless to Claude)
+- Watch the terminal for messages like:
+  - `⏳ Token expiring soon! Automatically refreshing...`
+  - `✅ Token refresh complete! New token is now active.`
+- Customize the refresh threshold with `ZOOM_AUTO_REFRESH_THRESHOLD=600` (in seconds; default: 300 = 5 minutes)
+- No manual intervention needed — this happens automatically while the server runs
 
 ### Permission Denied on Scripts
 ```bash
