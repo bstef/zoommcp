@@ -57,37 +57,58 @@ if [ "$FORCE_REFRESH" -eq 1 ]; then
 elif [ -n "${ZOOM_ACCESS_TOKEN:-}" ] && command -v python3 >/dev/null 2>&1; then
   echo "🔍 Checking existing token..."
   
-  check_result=$(python3 - "$ZOOM_ACCESS_TOKEN" 2>/dev/null <<'PY'
-import sys,base64,json,time
+  # Use temp variable to ensure we capture only the first output line
+  check_output=$(python3 << 'PYTHON_END'
+import sys, base64, json, time
+token = """ZOOM_TOKEN_PLACEHOLDER"""
 try:
-    token = sys.argv[1]
     parts = token.split('.')
-    if len(parts) < 2:
+    if len(parts) != 3:
         print('INVALID')
-        sys.exit(1)
-    payload = parts[1]
-    padding = '=' * (-len(payload) % 4)
-    data = base64.urlsafe_b64decode(payload + padding)
-    obj = json.loads(data)
-    exp = obj.get('exp')
-    if not exp:
-        print('INVALID')
-        sys.exit(1)
-    now = int(time.time())
-    remaining = exp - now
-    remaining_min = remaining // 60
-    if remaining > 60:  # Valid for more than 1 minute
-        print(f'VALID:{remaining_min}')
-        sys.exit(0)
-    print('EXPIRED')
-    sys.exit(1)
-except:
+    else:
+        payload = parts[1]
+        padding = '=' * (4 - len(payload) % 4)
+        data = base64.urlsafe_b64decode(payload + padding)
+        obj = json.loads(data)
+        exp = obj.get('exp', 0)
+        now = int(time.time())
+        remaining = exp - now
+        if remaining > 60:
+            remaining_min = remaining // 60
+            print(f'VALID:{remaining_min}')
+        else:
+            print('EXPIRED')
+except Exception as e:
     print('INVALID')
-    sys.exit(1)
-PY
+PYTHON_END
 )
   
-  if [[ "$check_result" == VALID:* ]]; then
+  # Replace placeholder with actual token in Python
+  check_result=$(echo "$check_output" | python3 -c "
+import sys, base64, json, time
+token = '$ZOOM_ACCESS_TOKEN'
+try:
+    parts = token.split('.')
+    if len(parts) == 3:
+        payload = parts[1]
+        padding = '=' * (4 - len(payload) % 4)
+        data = base64.urlsafe_b64decode(payload + padding)
+        obj = json.loads(data)
+        exp = obj.get('exp', 0)
+        now = int(time.time())
+        remaining = exp - now
+        if remaining > 60:
+            remaining_min = remaining // 60
+            print(f'VALID:{remaining_min}')
+        else:
+            print('EXPIRED')
+    else:
+        print('INVALID')
+except:
+    print('INVALID')
+" 2>/dev/null || echo 'EXPIRED')
+  
+  if [[ "$check_result" =~ ^VALID: ]]; then
     minutes="${check_result#VALID:}"
     echo "✅ Existing token is still valid (${minutes}m remaining)"
     echo ""
