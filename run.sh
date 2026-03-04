@@ -1,20 +1,46 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Display welcome banner
+display_banner() {
+  cat <<'BANNER'
+╔════════════════════════════════════════════════════════════════╗
+║                   🚀 ZOOM MCP SERVER 🚀                       ║
+║            Connect Claude with Your Zoom Meetings              ║
+╚════════════════════════════════════════════════════════════════╝
+BANNER
+}
+
 # Parse command line arguments
 FORCE_REFRESH=0
 
 usage() {
   cat <<USAGE
-Usage: $0 [-f|--force] [-h|--help]
-  -f, --force    Force fetch a new token even if current one is valid
-  -h, --help     Show this help message
+📋 USAGE:
+  $0 [OPTIONS]
 
-Examples:
+⚙️  OPTIONS:
+  -f, --force    🔄 Force fetch a new token even if current one is valid
+  -h, --help     ❓ Show this help message
+
+💡 EXAMPLES:
   $0              # Normal run - only refreshes if token expired
   $0 -f           # Force new token then start server
+
 USAGE
   exit 0
+}
+
+display_startup_info() {
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  if [ "$FORCE_REFRESH" -eq 1 ]; then
+    echo "🔧 Configuration: FORCE REFRESH enabled"
+  else
+    echo "🔧 Configuration: Smart token validation (only refresh if needed)"
+  fi
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
 }
 
 while [[ $# -gt 0 ]]; do
@@ -24,6 +50,7 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     -h|--help)
+      display_banner
       usage
       ;;
     *)
@@ -32,6 +59,10 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Show banner and startup info
+display_banner
+display_startup_info
 
 load_env() {
   if [ -f .env ]; then
