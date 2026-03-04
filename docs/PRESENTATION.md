@@ -102,7 +102,7 @@
 
 1. **Show Current State** (30 sec)
    ```bash
-   ./get_zoom_token.sh
+   ./scripts/get_zoom_token.sh
    ```
    *Demonstrate: Shows existing token, validates without fetching*
 
@@ -113,11 +113,11 @@
    
    **Expected Output:**
    ```
-   ✅ VALID: Token expires at 2026-03-04 13:51:23 (57m remaining)
-   🔍 Checking Claude Desktop status...
-   ✅ Successfully started Claude
-   🔑 Zoom Token Status: Expires in 57m 29s at 1:51:23 PM
-   Zoom MCP Server running on stdio
+   ✅ Claude Desktop is running
+   ✅ Zoom token is still valid. No refresh needed.
+   ✅ Zoom MCP Server is running on stdio
+   🔄 Token monitoring active - updates every 60 seconds
+   🔑 Token Status: ✅ Expires in 57m 29s (at 1:51:23 PM)
    ```
    
    *Demonstrate: Opens browser, manages tokens, launches Claude*

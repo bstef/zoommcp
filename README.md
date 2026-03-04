@@ -5,13 +5,14 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
 ## Features
 
 - **9 Zoom API Tools**: Meeting management (list, create, update, delete), user management, participants, and recordings
-- **Smart Token Management**: Checks existing tokens before fetching new ones (avoids unnecessary API calls)
+- **Smart Token Management**: Refreshes only when token is expired (or when force mode is used)
 - **Enhanced User Experience**: Clear emoji-based status messages and time displayed in minutes for easy reading
 - **Automatic Token Refresh**: When running, the MCP server monitors token expiration and automatically refreshes when expiring soon (within 5 minutes, configurable)
 - **Token Expiration Monitoring**: Periodic display in terminal showing when your access token expires with visual separators and color-coded status (updates every 60 seconds, configurable)
 - **Reliable Claude App Detection**: Multi-method startup verification ensures Claude Desktop is fully running before server starts (up to 15 retries with multiple detection methods)
-- **Smart Zoom Sign-In**: Detects if you're already logged in to Zoom and only prompts for sign-in if needed
-- **One-Command Setup**: Single script handles token fetch, config update, Claude restart, and server startup
+- **Automatic Claude Recovery**: If Claude closes while running, the monitor detects it and attempts to reopen it
+- **One-Command Setup**: `./run.sh` keeps the banner UX and delegates unified startup to `run-mcp.sh`
+- **Claude Launch Hardening**: `launch-mcp.js` avoids shell execution issues in Claude MCP environments on macOS/iCloud paths
 - **Production Ready**: Comprehensive error handling, logging support, and cross-platform compatibility
 
 ## Prerequisites
@@ -50,31 +51,27 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
    - `-f, --force` - Force fetch a new token even if current one is valid
    - `-h, --help`  - Show help message
    
-   This script will:
+  `./run.sh` will:
    - Open your Zoom upcoming meetings page in your default browser
-   - Check if access token is expired (or skip if using `-f`)
-   - Fetch a new token if needed (or force fetch with `-f`)
-   - Update Claude Desktop config
-   - Restart Claude Desktop app if running (or launch it if not running) when token/config changes
-   - Ensure Claude Desktop is open before starting the MCP server
+  - Show startup banner and mode (normal vs force)
+  - Ensure Claude Desktop is running (opens it when needed)
+  - Refresh token only when expired (or force refresh with `-f`)
+  - Start MCP server with periodic token/Claude status monitoring
 
 ### Sample Output
 
 When you run `./run.sh`, you'll see output like this:
 
 ```
-✅ VALID: Token expires at 2026-03-04 13:51:23 (57m remaining)
-⚠️  Claude is not running. Attempting to open...
-🔍 Checking Claude Desktop status...
-   Looking for app: Claude
-   ✓ Found at: /Applications/Claude.app
-ℹ️  Claude is not running
-🚀 Claude is not running. Launching it now...
-📱 Launching Claude...
-✓ Launch command succeeded
-⏳ Waiting for Claude to start...
-✅ Successfully started Claude (found process)
-✓ Launch completed
+╔════════════════════════════════════════════════════════════════════╗
+║                  🚀 ZOOM MCP SERVER 🚀                             ║
+║             Connect Claude with Your Zoom Meetings                 ║
+╚════════════════════════════════════════════════════════════════════╝
+
+════════════════════════════════════════════════════════════════════
+🔧 Configuration: Smart token validation (only refresh if expired)
+════════════════════════════════════════════════════════════════════
+
 Opening Zoom meetings page...
 
 📝 If you're not already signed in:
@@ -83,11 +80,9 @@ Opening Zoom meetings page...
 
 🚀 Starting Zoom MCP Server...
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💡 Note: If Claude Desktop didn't start automatically:
-   1. Open Claude Desktop manually
-   2. The MCP server will connect automatically
-
+✅ Claude Desktop is running
+✅ Zoom token is still valid. No refresh needed.
+🚀 Starting Zoom MCP server...
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✅ Zoom MCP Server is running on stdio
 🔄 Token monitoring active - updates every 60 seconds
@@ -124,7 +119,7 @@ While the server is running, if your token expires or is expiring soon (within 5
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-This automatic refresh happens seamlessly without any action needed on your part. Your token and Claude Desktop config are automatically updated, and the server continues running without interruption.
+This automatic refresh happens seamlessly without any action needed on your part. The server continues running without interruption.
 
 ## Scripts Reference
 
@@ -132,10 +127,12 @@ All shell scripts are located in the `scripts/` folder for better organization.
 
 | Script | Purpose |
 |--------|---------|
-| **`run.sh`** | Main entry point (at root) - opens Zoom upcoming meetings page, orchestrates token check, refresh, config update, Claude restart, and server startup. Supports `-f` flag to force new token fetch |
+| **`run.sh`** | Main user entrypoint (at root) with banner/UI. Opens Zoom upcoming meetings and delegates startup to `run-mcp.sh`. Supports `-f` |
+| **`run-mcp.sh`** | Unified startup engine. Ensures Claude is running, refreshes token only if expired (or force), then starts MCP server |
+| **`launch-mcp.js`** | Claude MCP-safe launcher (`node launch-mcp.js`) that loads `.env`/token and starts `index.js` without shell script execution |
 | **`scripts/get_zoom_token.sh`** | Smart token fetcher that checks for existing valid tokens first. Only fetches from Zoom API if current token is expired/missing. Shows full token with enhanced visual feedback (🔄 🔍 ✅ ⚠️ ❌). Supports `-f` flag to skip validation and force fetch |
 | **`scripts/check_zoom_token.sh`** | Validates current token by checking JWT expiration. Displays time remaining in minutes. Enhanced messaging with emojis for all statuses (✅ ⏰ ❌ 🔍) |
-| **`scripts/update_claude_config.sh`** | Injects `ZOOM_ACCESS_TOKEN` into Claude Desktop config file |
+| **`scripts/update_claude_config.sh`** | Injects `ZOOM_ACCESS_TOKEN` into Claude Desktop config file and restarts Claude to force config reload |
 | **`scripts/restart_claude_app.sh`** | Restarts Claude Desktop if running, or opens it if not running. Includes smart startup verification with multiple detection methods (up to 15 retries) to ensure Claude is fully running before proceeding |
 
 ### Token Validation Details
@@ -196,6 +193,15 @@ ZOOM_TOKEN_DISPLAY_INTERVAL=30 ./run.sh
 ZOOM_TOKEN_DISPLAY_INTERVAL=120 ./run.sh
 ```
 
+## Startup Modes
+
+- **Interactive local startup**: use `./run.sh` (recommended)
+  - Best for terminal-driven startup with banner and Zoom browser opening.
+- **Engine-only startup**: use `./run-mcp.sh`
+  - Same startup checks without banner/browser step.
+- **Claude MCP startup**: configure Claude to run `node launch-mcp.js`
+  - Avoids macOS shell execution restrictions from Claude log contexts.
+
 ## Claude Desktop Configuration
 
 The server integrates with Claude Desktop via the MCP configuration file.
@@ -211,16 +217,13 @@ The server integrates with Claude Desktop via the MCP configuration file.
   "mcpServers": {
     "zoom": {
       "command": "node",
-      "args": ["/absolute/path/to/zoommcp/index.js"],
-      "env": {
-        "ZOOM_ACCESS_TOKEN": "your_access_token_here"
-      }
+      "args": ["/absolute/path/to/zoommcp/launch-mcp.js"]
     }
   }
 }
 ```
 
-The `update_claude_config.sh` script automatically updates this configuration with your current access token.
+`launch-mcp.js` loads token values from `.env` and Claude config when present, then starts `index.js`.
 
 ### Manual Setup (Alternative)
 
@@ -249,7 +252,7 @@ node index.js
 
 The server communicates via stdio and will output:
 ```
-Zoom MCP Server running on stdio
+✅ Zoom MCP Server is running on stdio
 ```
 
 ## Available Tools
@@ -308,11 +311,11 @@ Zoom MCP Server running on stdio
 
 ### Token Issues
 - **"❌ MISSING: ZOOM_ACCESS_TOKEN not found in .env file"**
-  - Run `./get_zoom_token.sh` to fetch a new token
+  - Run `./scripts/get_zoom_token.sh` to fetch a new token
   - Ensure `.env` file exists with proper credentials (see `.env.example`)
 
 - **"⏰ EXPIRED: Token expired at [time]"**
-  - Run `./get_zoom_token.sh` to fetch a fresh token
+  - Run `./scripts/get_zoom_token.sh` to fetch a fresh token
   - The script will automatically check and only fetch if needed
 
 - **Token expires quickly**
@@ -323,12 +326,12 @@ Zoom MCP Server running on stdio
 
 ### Claude Desktop Not Connecting
 - Check that Claude Desktop config path is correct
-- Verify the `args` path in config points to your `index.js` file (use absolute path)
+- Verify the `args` path in config points to your `launch-mcp.js` file (use absolute path)
 - Restart Claude Desktop after config changes
 - Check Claude Desktop logs: `~/Library/Logs/Claude/mcp*.log`
 
 ### Claude App Launch Behavior
-- `./restart_claude_app.sh` now checks whether Claude is running first
+- `./scripts/restart_claude_app.sh` now checks whether Claude is running first
 - If Claude is running, it performs a restart
 - If Claude is not running, it opens Claude automatically
 

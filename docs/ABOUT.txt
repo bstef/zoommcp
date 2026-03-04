@@ -21,12 +21,13 @@ HOW IT WORKS
 The system creates a secure bridge between Claude and Zoom's API:
 
     1. Run ./run.sh
-    2. Your meetings page opens automatically in the browser
-    3. Claude receives access to manage your Zoom account
-    4. Authentication tokens stay fresh automatically
-    5. Claude Desktop restarts if running (or opens if not) when tokens/config change
-    6. Claude Desktop is ensured to be running before the MCP server starts
-    7. Start asking Claude about your meetings
+    2. Banner/startup mode is displayed for clear status
+    3. Your meetings page opens automatically in the browser
+    4. Claude Desktop is ensured to be running before MCP startup
+    5. Token is refreshed only when expired (or via force mode)
+    6. Claude receives access to manage your Zoom account
+    7. Authentication tokens stay fresh automatically (periodic monitoring)
+    8. Start asking Claude about your meetings
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -35,6 +36,8 @@ KEY FEATURES
   ✓  Natural language meeting management
   ✓  Automatic credential handling
   ✓  Smart token validation (checks before fetching new ones)
+  ✓  Unified startup flow (`run.sh` -> `run-mcp.sh`)
+  ✓  Claude MCP-safe launcher (`launch-mcp.js`)
   ✓  Browser-free workflow
   ✓  Real-time meeting access
   ✓  Participant tracking & recordings
@@ -67,17 +70,18 @@ WHAT YOU'LL SEE
 
 When you run ./run.sh, the system will:
   
-  ✅ Validate your access token (or fetch new one)
-  🔍 Check and launch Claude Desktop if needed
+  ✅ Show startup banner and mode
   🌐 Open Zoom meetings page in your browser
-  🔑 Display token expiration countdown
-  🚀 Start the MCP server
+  🔍 Check and launch Claude Desktop if needed
+  ✅ Validate your access token (or fetch new one)
+  🚀 Start the MCP server with periodic token monitoring
+  🔑 Display token expiration countdown every 60 seconds
 
 Output looks like:
-  "✅ VALID: Token expires at 2026-03-04 13:51:23 (57m remaining)"
-  "✅ Successfully started Claude"
-  "🔑 Zoom Token Status: Expires in 57m 29s at 1:51:23 PM"
-  "Zoom MCP Server running on stdio"
+  "✅ Claude Desktop is running"
+  "✅ Zoom token is still valid. No refresh needed."
+  "✅ Zoom MCP Server is running on stdio"
+  "🔑 Token Status: ✅ Expires in 57m 29s (at 1:51:23 PM)"
 
 Now talk to Claude about your Zoom meetings!
 

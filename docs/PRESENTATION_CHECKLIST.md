@@ -5,7 +5,7 @@
 ## ⏰ 1 Hour Before Meeting
 
 ### Technical Setup
-- [ ] Run `./get_zoom_token.sh` - verify token is valid for >30 minutes
+- [ ] Run `./scripts/get_zoom_token.sh` - verify token is valid for >30 minutes
 - [ ] Run `./run.sh` - verify everything launches perfectly
 - [ ] Test Claude Desktop: Ask it "Show my upcoming Zoom meetings"
 - [ ] Verify you have 3-4 test meetings in your Zoom account
@@ -82,7 +82,7 @@
 ### Slide 5 - DEMO ⭐
 - [ ] Stand up (shows confidence)
 - [ ] Demo sequence:
-  - [ ] `./get_zoom_token.sh` (30 sec)
+  - [ ] `./scripts/get_zoom_token.sh` (30 sec)
   - [ ] `./run.sh` (30 sec)
   - [ ] Talk to Claude - 3 queries (3 min)
   - [ ] Show automation features (30 sec)

@@ -78,7 +78,7 @@
 
 **Demo Sequence:**
 1. **Show token management** (30 sec)
-   - Run `./get_zoom_token.sh`
+  - Run `./scripts/get_zoom_token.sh`
    - Point out: "See? Shows current token, validates it, doesn't fetch unnecessarily"
    - *This demonstrates efficiency*
 

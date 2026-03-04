@@ -20,7 +20,7 @@
 
 ```bash
 # 1. Show smart token validation (30 sec)
-./get_zoom_token.sh
+./scripts/get_zoom_token.sh
 
 # 2. Launch system (30 sec)  
 ./run.sh
@@ -28,11 +28,11 @@
 
 **What You'll See:**
 ```
-✅ VALID: Token expires at 2026-03-04 13:51:23 (57m remaining)
-🔍 Checking Claude Desktop status...
-✅ Successfully started Claude
-🔑 Zoom Token Status: Expires in 57m 29s at 1:51:23 PM
-Zoom MCP Server running on stdio
+✅ Claude Desktop is running
+✅ Zoom token is still valid. No refresh needed.
+✅ Zoom MCP Server is running on stdio
+🔄 Token monitoring active - updates every 60 seconds
+🔑 Token Status: ✅ Expires in 57m 29s (at 1:51:23 PM)
 ```
 
 **Point out:** "Look at those emojis - instant status feedback!"
@@ -71,7 +71,7 @@ A: Yes - official Zoom enterprise OAuth, same as desktop app
 A: Zero - users already talk to Claude naturally
 
 **Q: "What if it breaks?"**
-A: Automatic recovery, tokens refresh every hour
+A: Automatic recovery, Claude can be reopened and tokens auto-refresh when expiring soon
 
 **Q: "Cost to scale?"**
 A: None - open source, no per-user fees
