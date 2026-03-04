@@ -2,6 +2,11 @@
 set -euo pipefail
 
 APP_NAME="${CLAUDE_APP_NAME:-Claude}"
+app_was_running=false
+
+if pgrep -x "${APP_NAME}" >/dev/null 2>&1; then
+  app_was_running=true
+fi
 
 # Refresh the Zoom access token before restarting Claude.
 # Use the lightweight check script to avoid unnecessary network calls.
@@ -31,19 +36,23 @@ else
   fi
 fi
 
-# Try graceful quit first (suppress errors and continue)
-osascript -e "tell application \"${APP_NAME}\" to quit" >/dev/null 2>&1 || {
-  echo "Note: Claude app not running or could not quit via AppleScript" >&2
-}
+if [ "$app_was_running" = true ]; then
+  # Try graceful quit first (suppress errors and continue)
+  osascript -e "tell application \"${APP_NAME}\" to quit" >/dev/null 2>&1 || {
+    echo "Note: ${APP_NAME} could not quit via AppleScript" >&2
+  }
 
-# Give it a moment to exit
-sleep 2
-
-# If still running, force quit
-if pgrep -x "${APP_NAME}" >/dev/null 2>&1; then
-  echo "Force quitting ${APP_NAME}..." >&2
-  pkill -x "${APP_NAME}" || true
+  # Give it a moment to exit
   sleep 2
+
+  # If still running, force quit
+  if pgrep -x "${APP_NAME}" >/dev/null 2>&1; then
+    echo "Force quitting ${APP_NAME}..." >&2
+    pkill -x "${APP_NAME}" || true
+    sleep 2
+  fi
+else
+  echo "${APP_NAME} is not running. Launching it now..."
 fi
 
 # Verify the app exists before launching
