@@ -5,7 +5,8 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
 ## Features
 
 - **9 Zoom API Tools**: Meeting management (list, create, update, delete), user management, participants, and recordings
-- **Automatic Token Management**: JWT-based token validation with smart refresh (only when expired)
+- **Smart Token Management**: Checks existing tokens before fetching new ones (avoids unnecessary API calls)
+- **Enhanced User Experience**: Clear emoji-based status messages and time displayed in minutes for easy reading
 - **Automatic Token Refresh**: When running, the MCP server monitors token expiration and automatically refreshes when expiring soon (within 5 minutes, configurable)
 - **Token Expiration Countdown**: Periodic display in terminal showing when your access token expires (updates every 60 seconds, configurable)
 - **One-Command Setup**: Single script handles token fetch, config update, Claude restart, and server startup
@@ -55,18 +56,37 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
 | Script | Purpose |
 |--------|---------|
 | **`run.sh`** | Main entry point - opens Zoom upcoming meetings page, orchestrates token check, refresh, config update, Claude restart, and server startup |
-| **`get_zoom_token.sh`** | Fetches a new Zoom access token using Server-to-Server OAuth and saves it to `.env` |
-| **`check_zoom_token.sh`** | Validates current token by checking JWT expiration claim (exits 0 if valid, 1 if expired/missing) |
+| **`get_zoom_token.sh`** | Smart token fetcher that checks for existing valid tokens first. Only fetches from Zoom API if current token is expired/missing. Shows full token with enhanced visual feedback (🔄 🔍 ✅ ⚠️ ❌) |
+| **`check_zoom_token.sh`** | Validates current token by checking JWT expiration. Displays time remaining in minutes. Enhanced messaging with emojis for all statuses (✅ ⏰ ❌ 🔍) |
 | **`update_claude_config.sh`** | Injects `ZOOM_ACCESS_TOKEN` into Claude Desktop config file |
 | **`restart_claude_app.sh`** | Restarts Claude Desktop if running, or opens it if not running (macOS) |
 
 ### Token Validation Details
 
-The token check uses JWT payload inspection:
-- Parses the token's `exp` (expiration) claim
-- Refreshes token if expiring within 60 seconds (configurable via `ZOOM_TOKEN_THRESHOLD`)
-- Falls back to refresh if `python3` is unavailable for safety
-- Supports optional verbose logging to `./logs/zoom_token.log`
+The token management system now includes smart validation:
+- **`check_zoom_token.sh`**: Parses JWT payload and checks `exp` (expiration) claim
+  - Displays remaining time in **minutes** for better readability
+  - Enhanced status messages with emojis:
+    - 🔍 Checking token
+    - ✅ Token is valid (Xm remaining)
+    - ⏰ Token expired
+    - ⚠️ Token expires soon (within threshold)
+    - ❌ Token missing or invalid
+  - Refreshes token if expiring within 60 seconds (configurable via `ZOOM_TOKEN_THRESHOLD`)
+  - Falls back to refresh if `python3` is unavailable for safety
+  - Supports optional verbose logging to `./logs/zoom_token.log`
+
+- **`get_zoom_token.sh`**: Smart fetcher that avoids unnecessary API calls
+  - Checks for existing valid token **before** making API call
+  - Only fetches new token if current one is expired/missing (>1 minute threshold)
+  - Enhanced visual feedback:
+    - 🔍 Checking existing token
+    - ✅ Token still valid - using existing
+    - 🔄 Requesting new token from API
+    - 💾 Token saved successfully
+    - ❌ Clear error messages for all failure cases
+  - Displays **full token** (not just preview) for easy copying
+  - Shows token length for validation
 
 ### Environment Variables
 
@@ -201,14 +221,19 @@ Zoom MCP Server running on stdio
 ## Troubleshooting
 
 ### Token Issues
-- **"ZOOM_ACCESS_TOKEN environment variable is required"**
+- **"❌ MISSING: ZOOM_ACCESS_TOKEN not found in .env file"**
   - Run `./get_zoom_token.sh` to fetch a new token
-  - Ensure `.env` file exists with proper credentials
+  - Ensure `.env` file exists with proper credentials (see `.env.example`)
+
+- **"⏰ EXPIRED: Token expired at [time]"**
+  - Run `./get_zoom_token.sh` to fetch a fresh token
+  - The script will automatically check and only fetch if needed
 
 - **Token expires quickly**
   - Zoom Server-to-Server OAuth tokens typically last 1 hour
   - The `run.sh` script automatically refreshes when needed
-  - Adjust `ZOOM_TOKEN_THRESHOLD` if you want earlier refresh
+  - `get_zoom_token.sh` now checks existing tokens first (only fetches when expired)
+  - Adjust `ZOOM_TOKEN_THRESHOLD` if you want earlier refresh warnings
 
 ### Claude Desktop Not Connecting
 - Check that Claude Desktop config path is correct

@@ -61,21 +61,22 @@ if [ "$VERBOSE" -eq 1 ]; then
 fi
 
 if [ -z "${ZOOM_ACCESS_TOKEN:-}" ]; then
-  msg="MISSING: ZOOM_ACCESS_TOKEN is not set in .env"
+  msg="❌ MISSING: ZOOM_ACCESS_TOKEN not found in .env file"
   [ "$VERBOSE" -eq 1 ] && echo "$msg" >&2
   [ "$VERBOSE" -eq 1 ] && printf "%s %s\n" "$(date --iso-8601=seconds 2>/dev/null || date '+%Y-%m-%dT%H:%M:%S%z')" "$msg" >>"$LOG_FILE" || true
   exit 1
 fi
 
 if ! command -v python3 >/dev/null 2>&1; then
-  msg="python3 is required to parse token payload"
+  msg="❌ ERROR: python3 is required but not found - please install Python 3"
   [ "$VERBOSE" -eq 1 ] && echo "$msg" >&2
   [ "$VERBOSE" -eq 1 ] && printf "%s %s\n" "$(date --iso-8601=seconds 2>/dev/null || date '+%Y-%m-%dT%H:%M:%S%z')" "$msg" >>"$LOG_FILE" || true
   exit 1
 fi
 
 if [ "$VERBOSE" -eq 1 ]; then
-  echo "Checking ZOOM_ACCESS_TOKEN with threshold=${THRESHOLD}s"
+  threshold_min=$((THRESHOLD / 60))
+  echo "🔍 Validating Zoom token (threshold: ${threshold_min}m)..."
 fi
 
 out=$(python3 - "$ZOOM_ACCESS_TOKEN" "$THRESHOLD" <<'PY'
@@ -86,7 +87,7 @@ threshold = int(sys.argv[2])
 try:
     parts = token.split('.')
     if len(parts) < 2:
-        print('INVALID: token does not look like JWT', file=sys.stderr)
+        print('❌ INVALID: Token format is not a valid JWT', file=sys.stderr)
         sys.exit(1)
     payload = parts[1]
     padding = '=' * (-len(payload) % 4)
@@ -94,21 +95,23 @@ try:
     obj = json.loads(data)
     exp = obj.get('exp')
     if not exp:
-        print('INVALID: no exp claim in token', file=sys.stderr)
+        print('❌ INVALID: Token missing expiration claim', file=sys.stderr)
         sys.exit(1)
     now = int(time.time())
     remaining = exp - now
+    remaining_min = remaining // 60
+    threshold_min = threshold // 60
     exp_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(exp))
     if remaining <= 0:
-        print(f'EXPIRED: token expired at {exp_time} (now={now})', file=sys.stderr)
+        print(f'⏰ EXPIRED: Token expired at {exp_time}', file=sys.stderr)
         sys.exit(1)
-    print(f'OK: token expires at {exp_time} (in {remaining} seconds)')
+    print(f'✅ VALID: Token expires at {exp_time} ({remaining_min}m remaining)')
     if remaining <= threshold:
-      print(f'WARNING: token will expire within threshold ({threshold}s)')
+      print(f'⚠️  WARNING: Token expires soon (within {threshold_min}m threshold)')
       sys.exit(1)
     sys.exit(0)
 except Exception as e:
-    print('ERROR parsing token:', e, file=sys.stderr)
+    print(f'❌ ERROR: Failed to parse token - {e}', file=sys.stderr)
     sys.exit(1)
 PY
 )

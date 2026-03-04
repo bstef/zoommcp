@@ -34,11 +34,13 @@ KEY FEATURES
 
   ✓  Natural language meeting management
   ✓  Automatic credential handling
+  ✓  Smart token validation (checks before fetching new ones)
   ✓  Browser-free workflow
   ✓  Real-time meeting access
   ✓  Participant tracking & recordings
   ✓  User management capabilities
   ✓  Automatic token refresh while server is running (seamless, no downtime)
+  ✓  Enhanced visual feedback with emojis and clear status messages
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -67,9 +69,11 @@ UNDER THE HOOD
 
   • Node.js server bridging Claude ↔ Zoom API
   • Server-to-Server OAuth for security
+  • Smart token management (validates before refreshing)
   • Automatic token refresh (never expires mid-use)
   • Cross-platform support (macOS, Linux, Windows)
   • Integrated with Claude Desktop
+  • Enhanced CLI output with emojis and user-friendly messages
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
