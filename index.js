@@ -21,6 +21,10 @@ const ZOOM_API_BASE = "https://api.zoom.us/v2";
 let accessToken = null;
 let tokenRefreshInProgress = false;
 let tokenCheckInterval = null;
+let lastRefreshAttemptTime = 0;
+let consecutiveRefreshFailures = 0;
+const REFRESH_COOLDOWN_MS = 30000; // 30 seconds between refresh attempts
+const MAX_CONSECUTIVE_FAILURES = 3; // Stop trying after 3 failures
 
 // Initialize access token from environment
 function getAccessToken() {
@@ -135,6 +139,11 @@ function tokenIsExpired() {
 // Check if token needs automatic refresh (expiring within threshold)
 function tokenNeedsRefresh() {
   try {
+    // Don't attempt refresh if we've already failed multiple times
+    if (consecutiveRefreshFailures >= MAX_CONSECUTIVE_FAILURES) {
+      return false;
+    }
+    
     const token = getAccessToken();
     const expirationMs = parseTokenExpiration(token);
     
@@ -158,7 +167,23 @@ async function performAutoTokenRefresh() {
     return; // Prevent concurrent refresh attempts
   }
   
+  // Check cooldown period
+  const now = Date.now();
+  if (now - lastRefreshAttemptTime < REFRESH_COOLDOWN_MS) {
+    const waitTime = Math.ceil((REFRESH_COOLDOWN_MS - (now - lastRefreshAttemptTime)) / 1000);
+    console.error(`⏱️  Refresh attempt in progress. Please wait ${waitTime}s...`);
+    return;
+  }
+  
+  // Check if we've exceeded max failures
+  if (consecutiveRefreshFailures >= MAX_CONSECUTIVE_FAILURES) {
+    console.error("❌ Token refresh failed multiple times. Disabling auto-refresh.");
+    console.error("   Manual refresh required. Run: ./scripts/get_zoom_token.sh -f");
+    return;
+  }
+  
   tokenRefreshInProgress = true;
+  lastRefreshAttemptTime = now;
   
   try {
     console.error("⏳ Token expiring soon! Automatically refreshing...");
@@ -179,8 +204,8 @@ async function performAutoTokenRefresh() {
       console.error("   Error:", error.message);
       if (error.stdout) console.error("   Output:", error.stdout.toString().trim());
       if (error.stderr) console.error("   Stderr:", error.stderr.toString().trim());
-      tokenRefreshInProgress = false;
-      return;
+      // Don't return early - let the catch block handle failure tracking
+      throw error;
     }
     
     // Wait a moment for file write to complete
@@ -262,8 +287,18 @@ async function performAutoTokenRefresh() {
     
     console.error("✅ Token refresh complete! New token is now active.");
     displayTokenStatus();
+    
+    // Reset failure counter on successful refresh
+    consecutiveRefreshFailures = 0;
   } catch (error) {
+    consecutiveRefreshFailures++;
     console.error("❌ Error during token refresh:", error.message);
+    console.error(`   Attempt ${consecutiveRefreshFailures}/${MAX_CONSECUTIVE_FAILURES}`);
+    
+    if (consecutiveRefreshFailures >= MAX_CONSECUTIVE_FAILURES) {
+      console.error("❌ CRITICAL: Max refresh failures reached. Auto-refresh disabled.");
+      console.error("   Please manually run: ./scripts/get_zoom_token.sh -f");
+    }
   } finally {
     tokenRefreshInProgress = false;
   }
