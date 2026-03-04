@@ -103,6 +103,17 @@ function displayTokenStatus() {
   }
 }
 
+// Check if Claude Desktop is running
+function isClaudeRunning() {
+  try {
+    const claudeAppName = process.env.CLAUDE_APP_NAME || "Claude";
+    execSync(`pgrep -x "${claudeAppName}" >/dev/null 2>&1`);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 // Check if token needs automatic refresh (expiring within threshold)
 function tokenNeedsRefresh() {
   try {
@@ -683,11 +694,19 @@ async function main() {
   const updateInterval = parseInt(process.env.ZOOM_TOKEN_DISPLAY_INTERVAL || "60") * 1000;
   const tokenDisplayTimer = setInterval(async () => {
     console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    displayTokenStatus();
     
-    // Check if token needs refresh and trigger auto-refresh if so
-    if (tokenNeedsRefresh()) {
-      await performAutoTokenRefresh();
+    // Check if Claude Desktop is still running
+    const claudeRunning = isClaudeRunning();
+    if (!claudeRunning) {
+      console.error("⚠️  Claude Desktop is not running - MCP server will not be available");
+      displayTokenStatus();
+    } else {
+      displayTokenStatus();
+      
+      // Check if token needs refresh and trigger auto-refresh if so
+      if (tokenNeedsRefresh()) {
+        await performAutoTokenRefresh();
+      }
     }
   }, updateInterval);
   
