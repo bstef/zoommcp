@@ -5,9 +5,9 @@ set -euo pipefail
 display_banner() {
   cat <<'BANNER'
 ╔════════════════════════════════════════════════════════════════════╗
-║                  🚀 ZOOM MCP SERVER 🚀                            ║
+║                  🚀 ZOOM MCP SERVER 🚀                             ║
 ║             Connect Claude with Your Zoom Meetings                 ║
-╚════════════════════════════════════════════════════════════════════╝
+╚════════════════════════════════════════════════════════════════════╝ 
 BANNER
 }
 
@@ -33,13 +33,13 @@ USAGE
 
 display_startup_info() {
   echo ""
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "════════════════════════════════════════════════════════════════════"
   if [ "$FORCE_REFRESH" -eq 1 ]; then
     echo "🔧 Configuration: FORCE REFRESH enabled"
   else
     echo "🔧 Configuration: Smart token validation (only refresh if needed)"
   fi
-  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "════════════════════════════════════════════════════════════════════"
   echo ""
 }
 
