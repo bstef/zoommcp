@@ -24,8 +24,9 @@ The system creates a secure bridge between Claude and Zoom's API:
     2. Your meetings page opens automatically in the browser
     3. Claude receives access to manage your Zoom account
     4. Authentication tokens stay fresh automatically
-    5. Claude Desktop restarts if running (or opens if not)
-    6. Start asking Claude about your meetings
+    5. Claude Desktop restarts if running (or opens if not) when tokens/config change
+    6. Claude Desktop is ensured to be running before the MCP server starts
+    7. Start asking Claude about your meetings
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

@@ -6,6 +6,7 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
 
 - **9 Zoom API Tools**: Meeting management (list, create, update, delete), user management, participants, and recordings
 - **Automatic Token Management**: JWT-based token validation with smart refresh (only when expired)
+- **Token Expiration Countdown**: Periodic display in terminal showing when your access token expires (updates every 60 seconds, configurable)
 - **One-Command Setup**: Single script handles token fetch, config update, Claude restart, and server startup
 - **Production Ready**: Comprehensive error handling, logging support, and cross-platform compatibility
 
@@ -45,8 +46,8 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that in
    - Check if access token is expired
    - Fetch a new token if needed
    - Update Claude Desktop config
-  - Restart Claude Desktop app if running (or launch it if not running)
-   - Start the MCP server
+   - Restart Claude Desktop app if running (or launch it if not running) when token/config changes
+   - Ensure Claude Desktop is open before starting the MCP server
 
 ## Scripts Reference
 
@@ -82,6 +83,7 @@ CLAUDE_CONFIG_FILE          # Override Claude config path (default: macOS standa
 CLAUDE_MCP_SERVER_NAME      # Override MCP server name (default: "zoom")
 CLAUDE_ZOOM_ENV_KEY         # Override env variable name (default: "ZOOM_ACCESS_TOKEN")
 ZOOM_TOKEN_THRESHOLD        # Token refresh threshold in seconds (default: 60)
+ZOOM_TOKEN_DISPLAY_INTERVAL # How often to display token expiration countdown in seconds (default: 60)
 ZOOM_CHECK_VERBOSE          # Enable verbose logging (set to any non-empty value)
 ZOOM_CHECK_LOGFILE          # Log file path (default: ./logs/zoom_token.log)
 ```
@@ -216,6 +218,12 @@ Zoom MCP Server running on stdio
 - `./restart_claude_app.sh` now checks whether Claude is running first
 - If Claude is running, it performs a restart
 - If Claude is not running, it opens Claude automatically
+
+### Token Expiration Countdown
+- When the MCP server starts, it displays: `🔑 Zoom Token Status: Expires in XXm XXs at HH:MM:SS AM/PM`
+- This countdown updates periodically (every 60 seconds by default)
+- Customize the update frequency with `ZOOM_TOKEN_DISPLAY_INTERVAL=30` (in seconds)
+- Use `ZOOM_TOKEN_DISPLAY_INTERVAL=0` to disable the periodic countdown display
 
 ### Permission Denied on Scripts
 ```bash

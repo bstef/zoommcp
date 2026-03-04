@@ -23,6 +23,66 @@ function getAccessToken() {
   return accessToken;
 }
 
+// Parse JWT token to extract expiration time
+function parseTokenExpiration(token) {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      return null;
+    }
+    
+    // Decode the payload
+    const payload = parts[1];
+    const padding = "=".repeat((4 - (payload.length % 4)) % 4);
+    const decoded = Buffer.from(payload + padding, "base64").toString("utf-8");
+    const claims = JSON.parse(decoded);
+    
+    return claims.exp ? claims.exp * 1000 : null; // Convert to milliseconds
+  } catch (error) {
+    console.error("Failed to parse token expiration:", error.message);
+    return null;
+  }
+}
+
+// Format time remaining in human-readable format
+function formatTimeRemaining(expirationMs) {
+  const now = Date.now();
+  const remaining = Math.max(0, expirationMs - now);
+  
+  const hours = Math.floor(remaining / (1000 * 60 * 60));
+  const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  } else if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  } else {
+    return `${seconds}s`;
+  }
+}
+
+// Display token expiration status
+function displayTokenStatus() {
+  try {
+    const token = getAccessToken();
+    const expirationMs = parseTokenExpiration(token);
+    
+    if (!expirationMs) {
+      console.error("⚠️  Could not determine token expiration time");
+      return;
+    }
+    
+    const expirationDate = new Date(expirationMs);
+    const timeRemaining = formatTimeRemaining(expirationMs);
+    const now = new Date();
+    
+    console.error(`🔑 Zoom Token Status: Expires in ${timeRemaining} at ${expirationDate.toLocaleTimeString()}`);
+  } catch (error) {
+    console.error("Error displaying token status:", error.message);
+  }
+}
+
 // Helper function to make Zoom API requests
 async function makeZoomRequest(method, endpoint, data = null) {
   const token = getAccessToken();
@@ -475,6 +535,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 // Start the server
 async function main() {
   const transport = new StdioServerTransport();
+  
+  // Display initial token status
+  displayTokenStatus();
+  
+  // Set up periodic token status display (every 60 seconds, configurable via env)
+  const updateInterval = parseInt(process.env.ZOOM_TOKEN_DISPLAY_INTERVAL || "60") * 1000;
+  const tokenDisplayTimer = setInterval(() => {
+    displayTokenStatus();
+  }, updateInterval);
+  
+  // Ensure timer doesn't prevent process from exiting
+  tokenDisplayTimer.unref();
+  
   await server.connect(transport);
   console.error("Zoom MCP Server running on stdio");
 }
