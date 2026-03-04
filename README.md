@@ -91,13 +91,15 @@ The server is now running and Claude Desktop can access your Zoom account!
 
 ## Scripts Reference
 
+All shell scripts are located in the `scripts/` folder for better organization.
+
 | Script | Purpose |
 |--------|---------|
-| **`run.sh`** | Main entry point - opens Zoom upcoming meetings page, orchestrates token check, refresh, config update, Claude restart, and server startup. Supports `-f` flag to force new token fetch |
-| **`get_zoom_token.sh`** | Smart token fetcher that checks for existing valid tokens first. Only fetches from Zoom API if current token is expired/missing. Shows full token with enhanced visual feedback (🔄 🔍 ✅ ⚠️ ❌). Supports `-f` flag to skip validation and force fetch |
-| **`check_zoom_token.sh`** | Validates current token by checking JWT expiration. Displays time remaining in minutes. Enhanced messaging with emojis for all statuses (✅ ⏰ ❌ 🔍) |
-| **`update_claude_config.sh`** | Injects `ZOOM_ACCESS_TOKEN` into Claude Desktop config file |
-| **`restart_claude_app.sh`** | Restarts Claude Desktop if running, or opens it if not running (macOS) |
+| **`run.sh`** | Main entry point (at root) - opens Zoom upcoming meetings page, orchestrates token check, refresh, config update, Claude restart, and server startup. Supports `-f` flag to force new token fetch |
+| **`scripts/get_zoom_token.sh`** | Smart token fetcher that checks for existing valid tokens first. Only fetches from Zoom API if current token is expired/missing. Shows full token with enhanced visual feedback (🔄 🔍 ✅ ⚠️ ❌). Supports `-f` flag to skip validation and force fetch |
+| **`scripts/check_zoom_token.sh`** | Validates current token by checking JWT expiration. Displays time remaining in minutes. Enhanced messaging with emojis for all statuses (✅ ⏰ ❌ 🔍) |
+| **`scripts/update_claude_config.sh`** | Injects `ZOOM_ACCESS_TOKEN` into Claude Desktop config file |
+| **`scripts/restart_claude_app.sh`** | Restarts Claude Desktop if running, or opens it if not running (macOS) |
 
 ### Token Validation Details
 
@@ -340,12 +342,13 @@ zoommcp/
 ├── index.js                    # Main MCP server implementation
 ├── package.json                # Node.js dependencies
 ├── .env.example               # Environment variables template
-├── run.sh                     # Main orchestration script
-├── get_zoom_token.sh          # Token fetcher
-├── check_zoom_token.sh        # Token validator
-├── update_claude_config.sh    # Claude config updater
-├── restart_claude_app.sh      # Claude app restarter
+├── run.sh                     # Main entry point script
 ├── logs/                      # Optional log directory
+├── scripts/                   # Shell scripts for automation
+│   ├── check_zoom_token.sh    # Token validator
+│   ├── get_zoom_token.sh      # Token fetcher
+│   ├── restart_claude_app.sh  # Claude app restarter
+│   └── update_claude_config.sh # Claude config updater
 └── docs/                      # Documentation and presentation materials
     ├── ABOUT.txt              # Project overview (quick reference)
     ├── PRESENTATION.md        # Full presentation deck for stakeholders

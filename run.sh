@@ -45,7 +45,7 @@ load_env
 
 restart_or_open_claude() {
   echo "Ensuring Claude Desktop is running (restart if open, launch if closed)..."
-  if ./restart_claude_app.sh; then
+  if ./scripts/restart_claude_app.sh; then
     echo "✓ Claude Desktop operation completed"
   else
     echo "⚠️  Claude Desktop operation had issues (see above)"
@@ -59,7 +59,7 @@ ensure_claude_open_if_needed() {
     echo "✓ ${app_name} is already running"
   else
     echo "⚠️  ${app_name} is not running. Attempting to open..."
-    if ./restart_claude_app.sh; then
+    if ./scripts/restart_claude_app.sh; then
       echo "✓ Launch completed"
     else
       echo "⚠️  Could not launch ${app_name}"
@@ -106,14 +106,14 @@ PY
 
 if [ "$FORCE_REFRESH" -eq 1 ]; then
   echo "🔄 Force refresh requested - fetching new token..."
-  if ./get_zoom_token.sh -f; then
+  if ./scripts/get_zoom_token.sh -f; then
     load_env
-    ./update_claude_config.sh
+    ./scripts/update_claude_config.sh
     restart_or_open_claude
   else
     echo "❌ Failed to get new token. Continuing anyway..."
   fi
-elif [ -x ./check_zoom_token.sh ]; then
+elif [ -x ./scripts/check_zoom_token.sh ]; then
   # Determine threshold and verbose flags from env
   threshold_arg=""
   verbose_arg=""
@@ -123,11 +123,11 @@ elif [ -x ./check_zoom_token.sh ]; then
   if [ -n "${ZOOM_CHECK_VERBOSE:-}" ]; then
     verbose_arg="-v"
   fi
-  if ! ./check_zoom_token.sh $threshold_arg $verbose_arg; then
+  if ! ./scripts/check_zoom_token.sh $threshold_arg $verbose_arg; then
     echo "⚠️  Token needs refresh. Fetching new token..."
-    if ./get_zoom_token.sh; then
+    if ./scripts/get_zoom_token.sh; then
       load_env
-      ./update_claude_config.sh
+      ./scripts/update_claude_config.sh
       restart_or_open_claude
     else
       echo "❌ Failed to get new token. Continuing with existing token (may cause API errors)..."
@@ -136,9 +136,9 @@ elif [ -x ./check_zoom_token.sh ]; then
 else
   if token_expired; then
     echo "⚠️  Token needs refresh. Fetching new token..."
-    if ./get_zoom_token.sh; then
+    if ./scripts/get_zoom_token.sh; then
       load_env
-      ./update_claude_config.sh
+      ./scripts/update_claude_config.sh
       restart_or_open_claude
     else
       echo "❌ Failed to get new token. Continuing with existing token (may cause API errors)..."

@@ -126,7 +126,7 @@ async function performAutoTokenRefresh() {
     console.error("📝 Running: get_zoom_token.sh");
     
     // Run get_zoom_token.sh with absolute path
-    const getTokenScript = path.join(__dirname, "get_zoom_token.sh");
+    const getTokenScript = path.join(__dirname, "scripts", "get_zoom_token.sh");
     try {
       const output = execSync(`bash "${getTokenScript}"`, {
         cwd: __dirname,
@@ -152,7 +152,7 @@ async function performAutoTokenRefresh() {
     console.error("⚙️  Running: update_claude_config.sh");
     
     // Run update_claude_config.sh with absolute path
-    const updateConfigScript = path.join(__dirname, "update_claude_config.sh");
+    const updateConfigScript = path.join(__dirname, "scripts", "update_claude_config.sh");
     try {
       execSync(`bash "${updateConfigScript}"`, {
         cwd: __dirname,
@@ -166,7 +166,7 @@ async function performAutoTokenRefresh() {
     console.error("🚀 Running: restart_claude_app.sh");
     
     // Run restart_claude_app.sh with absolute path
-    const restartClaudeScript = path.join(__dirname, "restart_claude_app.sh");
+    const restartClaudeScript = path.join(__dirname, "scripts", "restart_claude_app.sh");
     try {
       execSync(`bash "${restartClaudeScript}"`, {
         cwd: __dirname,
