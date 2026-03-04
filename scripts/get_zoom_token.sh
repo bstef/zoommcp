@@ -153,18 +153,58 @@ echo "✅ Token received successfully"
 
 # Save token into .env (create or replace ZOOM_ACCESS_TOKEN)
 env_file="../.env"
-touch "$env_file"
+mkdir -p "$(dirname "$env_file")"
 
-# Use sed with | delimiter (macOS sed needs -i '') to safely replace if the key exists
-if grep -q "^ZOOM_ACCESS_TOKEN=" "$env_file"; then
-  # Prefer GNU sed syntax when available, fall back to BSD (macOS) sed
-  if sed --version >/dev/null 2>&1; then
-    sed -i "s|^ZOOM_ACCESS_TOKEN=.*|ZOOM_ACCESS_TOKEN=\"$access_token\"|" "$env_file"
-  else
-    sed -i '' "s|^ZOOM_ACCESS_TOKEN=.*|ZOOM_ACCESS_TOKEN=\"$access_token\"|" "$env_file"
-  fi
+# Use atomic write to handle iCloud files safely: write to temp, then move
+temp_env="${env_file}.tmp.$$"
+
+if [ -f "$env_file" ]; then
+  # Copy existing file, then update the token line using Python for safe handling
+  cp "$env_file" "$temp_env"
+  python3 /dev/stdin "$temp_env" "$access_token" << 'PYTHON_END'
+import sys, os
+
+env_file = sys.argv[1]
+new_token = sys.argv[2]
+
+# Read existing file
+with open(env_file, 'r') as f:
+    lines = f.readlines()
+
+# Find and replace ZOOM_ACCESS_TOKEN line, or add it
+found = False
+output = []
+for line in lines:
+    if line.startswith('ZOOM_ACCESS_TOKEN='):
+        output.append(f'ZOOM_ACCESS_TOKEN="{new_token}"\n')
+        found = True
+    else:
+        output.append(line)
+
+if not found:
+    if output and not output[-1].endswith('\n'):
+        output.append('\n')
+    output.append(f'ZOOM_ACCESS_TOKEN="{new_token}"\n')
+
+# Write back safely
+with open(env_file, 'w') as f:
+    f.writelines(output)
+PYTHON_END
 else
-  printf "\nZOOM_ACCESS_TOKEN=\"%s\"\n" "$access_token" >> "$env_file"
+  # Create new file with token
+  printf "ZOOM_ACCESS_TOKEN=\"%s\"\n" "$access_token" > "$temp_env"
+fi
+
+# Atomic move: replace original file with updated temp file
+if [ -f "$temp_env" ]; then
+  mv "$temp_env" "$env_file" || {
+    echo "❌ ERROR: Failed to write token to $env_file" >&2
+    rm -f "$temp_env"
+    exit 1
+  }
+else
+  echo "❌ ERROR: Failed to prepare token file" >&2
+  exit 1
 fi
 
 # Export the token into the current process environment for immediate use

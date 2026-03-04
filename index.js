@@ -183,10 +183,51 @@ async function performAutoTokenRefresh() {
       return;
     }
     
+    // Wait a moment for file write to complete
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     // Reload token from .env
     console.error("🔄 Loading new token from .env");
+    const oldToken = process.env.ZOOM_ACCESS_TOKEN || '';
+    const oldTokenPreview = oldToken.substring(0, 20) + (oldToken.length > 20 ? '...' : '');
+    
     loadEnvFile();
     accessToken = null; // Clear cached token to force reload
+    
+    const newToken = process.env.ZOOM_ACCESS_TOKEN || '';
+    const newTokenPreview = newToken.substring(0, 20) + (newToken.length > 20 ? '...' : '');
+    
+    if (newToken !== oldToken && newToken) {
+      console.error(`✅ Token updated: ${oldTokenPreview} → ${newTokenPreview}`);
+    } else if (!newToken) {
+      console.error("⚠️  WARNING: Token not found in environment. Attempting to read from .env file...");
+      
+      // Try reading directly from .env file
+      try {
+        const envPath = path.join(__dirname, ".env");
+        if (fs.existsSync(envPath)) {
+          const envContent = fs.readFileSync(envPath, 'utf-8');
+          // Match ZOOM_ACCESS_TOKEN with more flexible quote handling
+          const tokenMatch = envContent.match(/^ZOOM_ACCESS_TOKEN\s*=\s*["']?([^"\n\r]+?)["']?\s*$/m);
+          if (tokenMatch && tokenMatch[1]) {
+            const fileToken = tokenMatch[1].trim().replace(/["']/g, '');
+            if (fileToken && fileToken.length > 50) {
+              process.env.ZOOM_ACCESS_TOKEN = fileToken;
+              accessToken = null;
+              console.error(`✅ Token loaded from .env file: ${fileToken.substring(0, 20)}...`);
+            } else if (!fileToken) {
+              console.error("❌ ERROR: .env file is empty or corrupted for ZOOM_ACCESS_TOKEN");
+            }
+          } else {
+            console.error("❌ ERROR: Could not find ZOOM_ACCESS_TOKEN in .env file");
+          }
+        } else {
+          console.error("❌ ERROR: .env file does not exist");
+        }
+      } catch (e) {
+        console.error("⚠️  Could not read .env file:", e.message);
+      }
+    }
     
     console.error("⚙️  Running: update_claude_config.sh");
     
@@ -215,6 +256,9 @@ async function performAutoTokenRefresh() {
     } catch (error) {
       console.error("⚠️  Failed to restart Claude:", error.message);
     }
+    
+    // Final wait before displaying status to let Claude restart complete
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     console.error("✅ Token refresh complete! New token is now active.");
     displayTokenStatus();

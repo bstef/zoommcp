@@ -64,8 +64,8 @@ When you run `./run.sh`, you'll see output like this:
 
 ```
 ╔════════════════════════════════════════════════════════════════════╗
-║                  🚀 ZOOM MCP SERVER 🚀                             ║
-║             Connect Claude with Your Zoom Meetings                 ║
+║                      ZOOM MCP SERVER                               ║
+║               Connect Claude with Your Zoom Meetings               ║
 ╚════════════════════════════════════════════════════════════════════╝
 
 ════════════════════════════════════════════════════════════════════
