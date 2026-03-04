@@ -701,6 +701,7 @@ async function main() {
       console.error("⚠️  Claude Desktop is not running - MCP server will not be available");
       displayTokenStatus();
     } else {
+      console.error("✅ Claude Desktop is running - MCP server is active");
       displayTokenStatus();
       
       // Check if token needs refresh and trigger auto-refresh if so
