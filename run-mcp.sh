@@ -138,8 +138,53 @@ maybe_refresh_expired_token() {
   export ZOOM_ACCESS_TOKEN
 }
 
+display_token_status() {
+  if [ -z "${ZOOM_ACCESS_TOKEN:-}" ]; then
+    return
+  fi
+
+  if ! command -v python3 >/dev/null 2>&1; then
+    return
+  fi
+
+  python3 - "$ZOOM_ACCESS_TOKEN" <<'PY'
+import sys,base64,json,time
+
+token = sys.argv[1]
+try:
+    parts = token.split('.')
+    if len(parts) < 2:
+        sys.exit(0)
+    payload = parts[1]
+    padding = '=' * (-len(payload) % 4)
+    data = base64.urlsafe_b64decode(payload + padding)
+    obj = json.loads(data)
+    exp = obj.get('exp')
+    if not exp:
+        sys.exit(0)
+    now = int(time.time())
+    remaining = exp - now
+    remaining_min = remaining // 60
+    remaining_sec = remaining % 60
+    exp_time = time.strftime('%H:%M:%S', time.localtime(exp))
+    if remaining <= 0:
+        print(f'⏰ Token expired', file=sys.stderr)
+        sys.exit(0)
+    # Format remaining time nicely
+    if remaining_min > 0:
+        time_str = f'{remaining_min}m {remaining_sec}s'
+    else:
+        time_str = f'{remaining_sec}s'
+    print(f'🔑 Token refreshed - Expires in {time_str} (at {exp_time})', file=sys.stderr)
+    sys.exit(0)
+except Exception as e:
+    sys.exit(0)
+PY
+}
+
 ensure_claude_running
 maybe_refresh_expired_token
+display_token_status
 
 log "🚀 Starting Zoom MCP server..."
 exec node "$DIR/index.js"
