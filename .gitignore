@@ -5,3 +5,8 @@ node_modules/
 /assets
 notes.txt
 /logs/*.log
+dist/
+build/
+*.dmg
+*.zip
+out/
