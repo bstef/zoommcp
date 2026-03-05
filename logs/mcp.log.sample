@@ -1,0 +1,15 @@
+[2026-03-04 15:24:41] ✅ Claude Desktop is running
+[2026-03-04 15:24:41] ✅ Zoom token is still valid. No refresh needed.
+[2026-03-04 15:24:42] 🚀 Starting Zoom MCP server...
+[2026-03-04 20:24:42] 🔑 Token Status: ✅ Expires in 48m 41s (at 4:13:24 PM)
+[2026-03-04 20:24:42] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[2026-03-04 20:24:42] ✅ Zoom MCP Server is running on stdio
+[2026-03-04 20:24:42] 🔄 Token monitoring active - updates every 60 seconds
+[2026-03-04 20:24:42] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[2026-03-04 22:52:15] ⏳ Token expiring soon! Automatically refreshing...
+[2026-03-04 22:52:15] 📝 Running: get_zoom_token.sh
+[2026-03-04 22:52:15] 📋 Token fetched successfully
+[2026-03-04 22:52:16] 🔄 Loading new token from .env
+[2026-03-04 22:52:16] ⚙️  Running: update_claude_config.sh
+[2026-03-04 22:52:19] 🚀 Running: restart_claude_app.sh
+[2026-03-04 22:52:27] ✅ Token refresh complete! New token is now active.

@@ -3,4 +3,5 @@ node_modules/
 .env.local
 .DS_Store
 /assets
-notes.txt/logs
+notes.txt
+/logs/*.log
