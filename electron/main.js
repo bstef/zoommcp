@@ -25,6 +25,9 @@ if (!gotTheLock) {
 }
 
 function createWindow() {
+    const iconPath = path.join(__dirname, '../assets/icon.png');
+    const iconExists = fs.existsSync(iconPath);
+
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
@@ -33,14 +36,16 @@ function createWindow() {
             nodeIntegration: false,
             contextIsolation: true,
         },
-        icon: path.join(__dirname, '../assets/icon.png'),
+        ...(iconExists && { icon: iconPath }),
     });
 
     const startUrl = isDev
         ? 'http://localhost:3000'
-        : `file://${path.join(__dirname, '../dist/index.html')}`;
+        : `file://${path.join(__dirname, 'index.html')}`;
 
-    mainWindow.loadURL(startUrl);
+    mainWindow.loadURL(startUrl).catch((err) => {
+        console.error('Failed to load URL:', err);
+    });
 
     if (isDev) {
         mainWindow.webContents.openDevTools();

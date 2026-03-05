@@ -49,10 +49,12 @@
       ]
     },
     "files": [
+      "electron/**/*",
       "dist/**/*",
       "index.js",
       "launch-mcp.js",
       ".env",
+      ".env.example",
       "package.json",
       "node_modules/**/*",
       "scripts/**/*"

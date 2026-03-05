@@ -1,62 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zoom MCP</title>
     <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
+</head>
+
+<body>
     <div class="container">
-      <header>
-        <div class="header-content">
-          <h1>🎬 Zoom MCP</h1>
-          <p>Manage Zoom meetings via Claude AI</p>
-        </div>
-        <div class="status-indicator" id="statusIndicator">
-          <span class="status-dot offline"></span>
-          <span class="status-text">Checking...</span>
-        </div>
-      </header>
+        <header>
+            <div class="header-content">
+                <h1>🎬 Zoom MCP</h1>
+                <p>Manage Zoom meetings via Claude AI</p>
+            </div>
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot offline"></span>
+                <span class="status-text">Checking...</span>
+            </div>
+        </header>
 
-      <main>
-        <section class="control-panel">
-          <div class="button-group">
-            <button id="startBtn" class="btn btn-primary">Start MCP Server</button>
-            <button id="stopBtn" class="btn btn-danger" disabled>Stop MCP Server</button>
-          </div>
-        </section>
+        <main>
+            <section class="control-panel">
+                <div class="button-group">
+                    <button id="startBtn" class="btn btn-primary">Start MCP Server</button>
+                    <button id="stopBtn" class="btn btn-danger" disabled>Stop MCP Server</button>
+                </div>
+            </section>
 
-        <section class="logs-section">
-          <div class="logs-header">
-            <h2>📋 Server Logs</h2>
-            <button id="clearBtn" class="btn btn-small">Clear</button>
-          </div>
-          <div id="logsContainer" class="logs-container">
-            <div class="log-entry info">Waiting for server to start...</div>
-          </div>
-        </section>
+            <section class="logs-section">
+                <div class="logs-header">
+                    <h2>📋 Server Logs</h2>
+                    <button id="clearBtn" class="btn btn-small">Clear</button>
+                </div>
+                <div id="logsContainer" class="logs-container">
+                    <div class="log-entry info">Waiting for server to start...</div>
+                </div>
+            </section>
 
-        <section class="info-section">
-          <h3>ℹ️ How it works</h3>
-          <ul>
-            <li>Click "Start MCP Server" to launch the Zoom MCP server</li>
-            <li>Once running, open Claude Desktop and start asking about your Zoom meetings</li>
-            <li>Server logs appear below in real-time</li>
-            <li>The server will automatically manage your Zoom tokens</li>
-          </ul>
-        </section>
-      </main>
+            <section class="info-section">
+                <h3>ℹ️ How it works</h3>
+                <ul>
+                    <li>Click "Start MCP Server" to launch the Zoom MCP server</li>
+                    <li>Once running, open Claude Desktop and start asking about your Zoom meetings</li>
+                    <li>Server logs appear below in real-time</li>
+                    <li>The server will automatically manage your Zoom tokens</li>
+                </ul>
+            </section>
+        </main>
 
-      <footer>
-        <p>
-          <a href="https://github.com/bstef/zoommcp" target="_blank">GitHub</a> •
-          <a href="https://zoom.us" target="_blank">Zoom</a> •
-          <a href="https://claude.ai" target="_blank">Claude</a>
-        </p>
-      </footer>
+        <footer>
+            <p>
+                <a href="https://github.com/bstef/zoommcp" target="_blank">GitHub</a> •
+                <a href="https://zoom.us" target="_blank">Zoom</a> •
+                <a href="https://claude.ai" target="_blank">Claude</a>
+            </p>
+        </footer>
     </div>
 
     <script src="renderer.js"></script>
-  </body>
+</body>
+
 </html>
