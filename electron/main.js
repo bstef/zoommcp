@@ -1,11 +1,7 @@
-import { app, BrowserWindow, Menu, ipcMain } from 'electron';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { spawn } from 'child_process';
-import fs from 'fs';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { app, BrowserWindow, Menu, ipcMain } = require('electron');
+const path = require('path');
+const { spawn } = require('child_process');
+const fs = require('fs');
 
 let mainWindow;
 let serverProcess;
@@ -25,36 +21,45 @@ if (!gotTheLock) {
 }
 
 function createWindow() {
-    const iconPath = path.join(__dirname, '../assets/icon.png');
-    const iconExists = fs.existsSync(iconPath);
+    try {
+        const iconPath = path.join(__dirname, '../assets/icon.png');
+        const iconExists = fs.existsSync(iconPath);
 
-    mainWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
-            nodeIntegration: false,
-            contextIsolation: true,
-        },
-        ...(iconExists && { icon: iconPath }),
-    });
+        const browserWindowConfig = {
+            width: 1200,
+            height: 800,
+            webPreferences: {
+                preload: path.join(__dirname, 'preload.js'),
+                nodeIntegration: false,
+                contextIsolation: true,
+            },
+        };
 
-    const startUrl = isDev
-        ? 'http://localhost:3000'
-        : `file://${path.join(__dirname, 'index.html')}`;
+        if (iconExists) {
+            browserWindowConfig.icon = iconPath;
+        }
 
-    mainWindow.loadURL(startUrl).catch((err) => {
-        console.error('Failed to load URL:', err);
-    });
+        mainWindow = new BrowserWindow(browserWindowConfig);
 
-    if (isDev) {
-        mainWindow.webContents.openDevTools();
+        const startUrl = isDev
+            ? 'http://localhost:3000'
+            : `file://${path.join(__dirname, 'index.html')}`;
+
+        mainWindow.loadURL(startUrl).catch((err) => {
+            console.error('Failed to load URL:', err);
+        });
+
+        if (isDev) {
+            mainWindow.webContents.openDevTools();
+        }
+
+        mainWindow.on('closed', () => {
+            mainWindow = null;
+            stopServer();
+        });
+    } catch (err) {
+        console.error('Error creating window:', err);
     }
-
-    mainWindow.on('closed', () => {
-        mainWindow = null;
-        stopServer();
-    });
 }
 
 function startServer() {
@@ -141,8 +146,8 @@ function createMenu() {
             submenu: [
                 {
                     label: 'GitHub',
-                    click: async () => {
-                        const { shell } = await import('electron');
+                    click: () => {
+                        const { shell } = require('electron');
                         shell.openExternal('https://github.com/bstef/zoommcp');
                     },
                 },
@@ -184,6 +189,10 @@ app.on('activate', () => {
     if (mainWindow === null) {
         createWindow();
     }
+});
+
+process.on('exit', () => {
+    stopServer();
 });
 
 process.on('exit', () => {

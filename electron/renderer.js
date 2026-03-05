@@ -5,12 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clearBtn');
     const logsContainer = document.getElementById('logsContainer');
     const statusIndicator = document.getElementById('statusIndicator');
-    
+
     if (!startBtn || !stopBtn || !clearBtn || !logsContainer || !statusIndicator) {
         console.error('Failed to find required DOM elements');
         return;
     }
-    
+
     const statusDot = statusIndicator.querySelector('.status-dot');
     const statusText = statusIndicator.querySelector('.status-text');
 
