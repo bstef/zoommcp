@@ -9,7 +9,12 @@
   },
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "app": "electron electron/main.js",
+    "app:dev": "electron electron/main.js --dev",
+    "app:build": "electron-builder --publish never",
+    "app:build:mac": "electron-builder --mac --publish never",
+    "app:install": "npm install && npm run app:build:mac && open dist/Zoom\\ MCP.app"
   },
   "keywords": [
     "mcp",
@@ -24,7 +29,33 @@
     "@modelcontextprotocol/sdk": "^1.26.0",
     "axios": "^1.6.0"
   },
+  "devDependencies": {
+    "electron": "^latest",
+    "electron-builder": "^latest"
+  },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "build": {
+    "appId": "com.zoommcp.app",
+    "productName": "Zoom MCP",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "files": [
+      "dist/**/*",
+      "index.js",
+      "launch-mcp.js",
+      ".env",
+      "package.json",
+      "node_modules/**/*",
+      "scripts/**/*"
+    ]
   }
 }
