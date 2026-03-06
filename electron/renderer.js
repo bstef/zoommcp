@@ -34,9 +34,73 @@ document.addEventListener('DOMContentLoaded', () => {
         logMessage('Logs cleared', 'info');
     });
 
+    // Status panel elements
+    const statusPanel = document.getElementById('statusPanel');
+    const statusClaudeVal = document.getElementById('statusClaudeVal');
+    const statusTokenVal = document.getElementById('statusTokenVal');
+    const statusMcpVal = document.getElementById('statusMcpVal');
+    const statusActivity = document.getElementById('statusActivity');
+    const statusActivityVal = document.getElementById('statusActivityVal');
+
+    function updateStatusPanel(msg) {
+        // Claude Desktop
+        if (msg.includes('Claude Desktop is running')) {
+            statusClaudeVal.textContent = '✅ Running';
+            statusPanel.style.display = '';
+        } else if (msg.includes('Claude Desktop is not running')) {
+            statusClaudeVal.textContent = '⚠️ Not running';
+            statusPanel.style.display = '';
+        }
+
+        // Token status
+        const tokenMatch = msg.match(/🔑 Token Status: (.+)/);
+        if (tokenMatch) {
+            statusTokenVal.textContent = tokenMatch[1].trim();
+            statusPanel.style.display = '';
+        }
+        if (msg.includes('Token refresh complete')) {
+            statusTokenVal.textContent = '✅ Refreshed';
+        }
+        if (msg.includes('Token refreshed')) {
+            const refreshMatch = msg.match(/Token refreshed - (.+)/);
+            if (refreshMatch) statusTokenVal.textContent = '✅ ' + refreshMatch[1].trim();
+        }
+
+        // MCP server
+        if (msg.includes('Zoom MCP Server is running on stdio')) {
+            statusMcpVal.textContent = '✅ Running';
+            statusPanel.style.display = '';
+        } else if (msg.includes('Server exited') || msg.includes('disconnected')) {
+            statusMcpVal.textContent = '⛔ Stopped';
+        }
+
+        // Activity
+        const activityPatterns = [
+            /⏳ (.+)/,
+            /📝 Running: (.+)/,
+            /⚙️\s+Running: (.+)/,
+            /🚀 Running: (.+)/,
+            /🔄 (.+)/,
+        ];
+        for (const pattern of activityPatterns) {
+            const m = msg.match(pattern);
+            if (m) {
+                statusActivityVal.textContent = m[0].trim();
+                statusActivity.style.display = '';
+                // Hide activity after 5 seconds
+                clearTimeout(statusActivity._hideTimer);
+                statusActivity._hideTimer = setTimeout(() => {
+                    statusActivity.style.display = 'none';
+                }, 5000);
+                break;
+            }
+        }
+    }
+
     // Listen for server messages
     window.electronAPI.onServerMessage((data) => {
         logMessage(data.message, data.type);
+        updateStatusPanel(data.message);
 
         // Update status based on messages
         if (data.message.includes('running on stdio')) {

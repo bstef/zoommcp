@@ -49,7 +49,7 @@ function startServer() {
 
         serverProcess = spawn('bash', [runScript], {
             cwd: projectRoot,
-            stdio: ['ignore', 'pipe', 'pipe'],
+            stdio: ['pipe', 'pipe', 'pipe'],
         });
 
         console.log('Server process spawned with PID:', serverProcess.pid);
@@ -221,7 +221,7 @@ ipcMain.on('stop-server', () => {
 });
 
 ipcMain.on('get-status', (event) => {
-    const hasProcess = serverProcess !== null && !serverProcess.killed;
+    const hasProcess = serverProcess != null && !serverProcess.killed;
     console.log('IPC: get-status, process running:', hasProcess);
     event.reply('server-status', { running: hasProcess });
 });
