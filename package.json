@@ -10,8 +10,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "app": "electron electron/main.cjs",
-    "app:dev": "electron electron/main.cjs --dev",
+    "app": "env ELECTRON_RUN_AS_NODE= electron electron/main.cjs",
+    "app:dev": "env ELECTRON_RUN_AS_NODE= electron electron/main.cjs --dev",
     "app:build": "electron-builder --publish never",
     "app:build:mac": "electron-builder --mac --publish never",
     "app:install": "npm install && npm run app:build:mac && open dist/Zoom\\ MCP.app"
