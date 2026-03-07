@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bstef/zoommcp</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d12;
+    --surface: #111520;
+    --surface2: #171d2e;
+    --border: #1e2a40;
+    --zoom-blue: #1a5fd4;
+    --zoom-blue-light: #2d7aff;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --success: #22c55e;
+    --warn: #f59e0b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(45, 122, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45, 122, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(26, 95, 212, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    animation: drift 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes drift {
+    from { transform: translate(0, 0); }
+    to { transform: translate(100px, 80px); }
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .repo-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 32px;
+    animation: slideUp 0.6s ease both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .repo-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--zoom-blue), var(--accent2));
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    box-shadow: 0 0 30px rgba(26, 95, 212, 0.4);
+  }
+
+  .repo-title-block h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .repo-title-block h1 .owner {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .repo-title-block h1 .sep { color: var(--border); margin: 0 4px; }
+
+  .repo-title-block h1 .name {
+    color: var(--zoom-blue-light);
+  }
+
+  .repo-desc {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 300;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+    animation: slideUp 0.6s ease 0.1s both;
+  }
+
+  .stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface);
+    color: var(--muted);
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .stat-pill:hover { border-color: var(--zoom-blue); color: var(--text); }
+  .stat-pill .icon { font-size: 14px; }
+  .lang-dot { width: 10px; height: 10px; border-radius: 50%; background: #3b82f6; }
+
+  .badge-python { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); color: #60a5fa; }
+  .badge-mcp { background: rgba(124, 58, 237, 0.1); border-color: rgba(124, 58, 237, 0.3); color: #a78bfa; }
+  .badge-zoom { background: rgba(26, 95, 212, 0.1); border-color: rgba(45, 122, 255, 0.3); color: #60a5fa; }
+
+  /* Section title */
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Architecture diagram */
+  .arch-section {
+    margin-bottom: 36px;
+    animation: slideUp 0.6s ease 0.2s both;
+  }
+
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .arch-diagram::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--zoom-blue), var(--accent), var(--accent2));
+  }
+
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    row-gap: 16px;
+  }
+
+  .arch-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .arch-box {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 110px;
+    border: 1px solid;
+    position: relative;
+  }
+
+  .arch-box.client {
+    background: rgba(45, 122, 255, 0.1);
+    border-color: rgba(45, 122, 255, 0.4);
+    color: #93c5fd;
+    box-shadow: 0 0 20px rgba(45, 122, 255, 0.1);
+  }
+
+  .arch-box.mcp {
+    background: rgba(124, 58, 237, 0.12);
+    border-color: rgba(124, 58, 237, 0.5);
+    color: #c4b5fd;
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);
+  }
+
+  .arch-box.zoom {
+    background: rgba(26, 95, 212, 0.15);
+    border-color: rgba(26, 95, 212, 0.5);
+    color: #60a5fa;
+    box-shadow: 0 0 20px rgba(26, 95, 212, 0.2);
+  }
+
+  .arch-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .arch-arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
+  }
+
+  .arrow-line {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--muted);
+    font-size: 18px;
+  }
+
+  .arrow-text {
+    font-size: 9px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+  }
+
+  /* Tools grid */
+  .tools-section {
+    margin-bottom: 36px;
+    animation: slideUp 0.6s ease 0.3s both;
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: border-color 0.2s, transform 0.2s, background 0.2s;
+    cursor: default;
+  }
+
+  .tool-card:hover {
+    border-color: var(--zoom-blue);
+    background: var(--surface2);
+    transform: translateY(-2px);
+  }
+
+  .tool-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .tool-info h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 3px;
+  }
+
+  .tool-info p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  /* File tree */
+  .files-section {
+    margin-bottom: 36px;
+    animation: slideUp 0.6s ease 0.4s both;
+  }
+
+  .file-tree {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  .tree-header {
+    padding: 10px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tree-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: default;
+  }
+
+  .tree-row:last-child { border-bottom: none; }
+  .tree-row:hover { background: var(--surface2); }
+
+  .tree-indent { margin-left: 20px; }
+  .tree-icon { width: 16px; text-align: center; font-size: 14px; }
+  .tree-name { flex: 1; color: var(--text); }
+  .tree-name.dir { color: #93c5fd; }
+  .tree-name.py { color: #86efac; }
+  .tree-name.config { color: #fcd34d; }
+  .tree-name.md { color: #c4b5fd; }
+  .tree-desc { font-size: 11px; color: var(--muted); }
+
+  /* Setup block */
+  .setup-section {
+    animation: slideUp 0.6s ease 0.5s both;
+  }
+
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-dots { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ef4444; }
+  .dot-y { background: #f59e0b; }
+  .dot-g { background: #22c55e; }
+  .code-title { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+
+  .code-content {
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .line { display: flex; gap: 12px; }
+  .ln { color: #374151; user-select: none; min-width: 20px; text-align: right; }
+  .c-comment { color: #6b7280; }
+  .c-key { color: #93c5fd; }
+  .c-val { color: #86efac; }
+  .c-str { color: #fcd34d; }
+  .c-op { color: #f472b6; }
+  .c-cmd { color: #a78bfa; }
+
+  /* Pulse dot */
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    display: inline-block;
+    animation: pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 6px var(--success);
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+
+  /* Two column layout */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 36px; }
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } .arch-flow { flex-direction: column; } }
+
+  .info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+
+  .info-card h4 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 12px;
+  }
+
+  .info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .info-item:last-child { border-bottom: none; }
+  .info-key { color: var(--muted); flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .info-val { color: var(--text); font-weight: 600; }
+  .info-val.green { color: var(--success); }
+  .info-val.blue { color: var(--accent); }
+
+  /* Footer */
+  .footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    animation: slideUp 0.6s ease 0.6s both;
+  }
+
+  .footer a { color: var(--zoom-blue-light); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="repo-header">
+    <div class="repo-icon">🔌</div>
+    <div class="repo-title-block">
+      <h1>
+        <span class="owner">bstef</span>
+        <span class="sep">/</span>
+        <span class="name">zoommcp</span>
+      </h1>
+      <div class="repo-desc">Model Context Protocol server for the Zoom REST API</div>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-pill badge-python"><div class="lang-dot"></div> Python</div>
+    <div class="stat-pill badge-mcp">⚡ MCP Server</div>
+    <div class="stat-pill badge-zoom">🎥 Zoom API</div>
+    <div class="stat-pill"><span class="live-dot"></span>&nbsp;Active</div>
+    <div class="stat-pill">⭐ Public</div>
+    <div class="stat-pill">📄 MIT</div>
+  </div>
+
+  <!-- Architecture -->
+  <div class="arch-section">
+    <div class="section-title">Architecture</div>
+    <div class="arch-diagram">
+      <div class="arch-flow">
+        <div class="arch-node">
+          <div class="arch-box client">AI Client<br><span style="font-size:10px;opacity:0.7">Claude / Cursor</span></div>
+          <div class="arch-label">MCP Host</div>
+        </div>
+        <div class="arch-arrow">
+          <div class="arrow-line">⟷</div>
+          <div class="arrow-text">MCP Protocol</div>
+          <div class="arrow-text">stdio / SSE</div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-box mcp">zoommcp<br><span style="font-size:10px;opacity:0.7">Python Server</span></div>
+          <div class="arch-label">This Repo</div>
+        </div>
+        <div class="arch-arrow">
+          <div class="arrow-line">⟷</div>
+          <div class="arrow-text">REST API</div>
+          <div class="arrow-text">OAuth 2.0</div>
+        </div>
+        <div class="arch-node">
+          <div class="arch-box zoom">Zoom API<br><span style="font-size:10px;opacity:0.7">api.zoom.us/v2</span></div>
+          <div class="arch-label">External</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tools -->
+  <div class="tools-section">
+    <div class="section-title">Exposed MCP Tools</div>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-icon">📅</div>
+        <div class="tool-info">
+          <h3>create_meeting</h3>
+          <p>Schedule a new Zoom meeting with topic, time, duration, and settings</p>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">✏️</div>
+        <div class="tool-info">
+          <h3>update_meeting</h3>
+          <p>Modify an existing meeting's details, schedule, or settings by ID</p>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">🗑️</div>
+        <div class="tool-info">
+          <h3>delete_meeting</h3>
+          <p>Remove a meeting or cancel a recurring instance by meeting ID</p>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">📋</div>
+        <div class="tool-info">
+          <h3>list_meetings</h3>
+          <p>Retrieve scheduled, live, or historical meetings for the user</p>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">🔍</div>
+        <div class="tool-info">
+          <h3>get_meeting</h3>
+          <p>Fetch full details of a single meeting including join URL and settings</p>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">👥</div>
+        <div class="tool-info">
+          <h3>list_participants</h3>
+          <p>View attendees and registration data for past or upcoming meetings</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two column info + files -->
+  <div class="two-col">
+    <div class="info-card">
+      <h4>Project Info</h4>
+      <div class="info-item">
+        <div class="tree-icon">🐍</div>
+        <span class="info-key">runtime</span>
+        <span class="info-val blue">Python 3.10+</span>
+      </div>
+      <div class="info-item">
+        <div class="tree-icon">📦</div>
+        <span class="info-key">transport</span>
+        <span class="info-val">stdio</span>
+      </div>
+      <div class="info-item">
+        <div class="tree-icon">🔐</div>
+        <span class="info-key">auth</span>
+        <span class="info-val">OAuth 2.0 S2S</span>
+      </div>
+      <div class="info-item">
+        <div class="tree-icon">⚙️</div>
+        <span class="info-key">config</span>
+        <span class="info-val">ENV vars</span>
+      </div>
+      <div class="info-item">
+        <div class="tree-icon">✅</div>
+        <span class="info-key">status</span>
+        <span class="info-val green">active</span>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h4>Environment Variables</h4>
+      <div class="info-item">
+        <span class="info-key">ZOOM_ACCOUNT_ID</span>
+        <span class="info-val blue">required</span>
+      </div>
+      <div class="info-item">
+        <span class="info-key">ZOOM_CLIENT_ID</span>
+        <span class="info-val blue">required</span>
+      </div>
+      <div class="info-item">
+        <span class="info-key">ZOOM_CLIENT_SECRET</span>
+        <span class="info-val blue">required</span>
+      </div>
+      <div class="info-item">
+        <span class="info-key">ZOOM_USER_ID</span>
+        <span class="info-val" style="color:var(--warn)">optional</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- File tree -->
+  <div class="files-section">
+    <div class="section-title">Repository Structure</div>
+    <div class="file-tree">
+      <div class="tree-header">
+        <span>📁</span> bstef / zoommcp
+      </div>
+      <div class="tree-row">
+        <div class="tree-icon">🐍</div>
+        <div class="tree-name py">server.py</div>
+        <div class="tree-desc">MCP server entrypoint, tool registrations</div>
+      </div>
+      <div class="tree-row">
+        <div class="tree-icon">🔌</div>
+        <div class="tree-name py">zoom_client.py</div>
+        <div class="tree-desc">Zoom REST API wrapper, OAuth token management</div>
+      </div>
+      <div class="tree-row">
+        <div class="tree-icon">📄</div>
+        <div class="tree-name config">pyproject.toml</div>
+        <div class="tree-desc">Project metadata, dependencies (mcp, httpx)</div>
+      </div>
+      <div class="tree-row">
+        <div class="tree-icon">📄</div>
+        <div class="tree-name config">uv.lock</div>
+        <div class="tree-desc">Locked dependency manifest</div>
+      </div>
+      <div class="tree-row">
+        <div class="tree-icon">📝</div>
+        <div class="tree-name md">README.md</div>
+        <div class="tree-desc">Setup guide, Claude Desktop config snippet</div>
+      </div>
+      <div class="tree-row">
+        <div class="tree-icon">⚖️</div>
+        <div class="tree-name config">LICENSE</div>
+        <div class="tree-desc">MIT License</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Setup code block -->
+  <div class="setup-section">
+    <div class="section-title">Claude Desktop Config</div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots">
+          <div class="dot dot-r"></div>
+          <div class="dot dot-y"></div>
+          <div class="dot dot-g"></div>
+        </div>
+        <div class="code-title">claude_desktop_config.json</div>
+      </div>
+      <div class="code-content">
+        <div class="line"><span class="ln">1</span><span class="c-comment">// ~/.config/claude/claude_desktop_config.json</span></div>
+        <div class="line"><span class="ln">2</span><span class="c-key">{</span></div>
+        <div class="line"><span class="ln">3</span><span>&nbsp;&nbsp;</span><span class="c-str">"mcpServers"</span><span class="c-op">:</span> <span class="c-key">{</span></div>
+        <div class="line"><span class="ln">4</span><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"zoom"</span><span class="c-op">:</span> <span class="c-key">{</span></div>
+        <div class="line"><span class="ln">5</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"command"</span><span class="c-op">:</span> <span class="c-val">"uv"</span><span class="c-op">,</span></div>
+        <div class="line"><span class="ln">6</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"args"</span><span class="c-op">:</span> <span class="c-key">[</span><span class="c-val">"run"</span><span class="c-op">,</span> <span class="c-val">"--directory"</span><span class="c-op">,</span> <span class="c-val">"/path/to/zoommcp"</span><span class="c-op">,</span> <span class="c-val">"server.py"</span><span class="c-key">]</span><span class="c-op">,</span></div>
+        <div class="line"><span class="ln">7</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"env"</span><span class="c-op">:</span> <span class="c-key">{</span></div>
+        <div class="line"><span class="ln">8</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"ZOOM_ACCOUNT_ID"</span><span class="c-op">:</span> <span class="c-val">"&lt;your-account-id&gt;"</span><span class="c-op">,</span></div>
+        <div class="line"><span class="ln">9</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"ZOOM_CLIENT_ID"</span><span class="c-op">:</span> <span class="c-val">"&lt;your-client-id&gt;"</span><span class="c-op">,</span></div>
+        <div class="line"><span class="ln">10</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"ZOOM_CLIENT_SECRET"</span><span class="c-op">:</span> <span class="c-val">"&lt;your-client-secret&gt;"</span></div>
+        <div class="line"><span class="ln">11</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-key">}</span></div>
+        <div class="line"><span class="ln">12</span><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-key">}</span></div>
+        <div class="line"><span class="ln">13</span><span>&nbsp;&nbsp;</span><span class="c-key">}</span></div>
+        <div class="line"><span class="ln">14</span><span class="c-key">}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>github.com/bstef/zoommcp</span>
+    <span>Python · MCP · Zoom API v2</span>
+  </div>
+
+</div>
+</body>
+</html>
