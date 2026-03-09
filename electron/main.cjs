@@ -147,7 +147,9 @@ function startServer() {
                 }
                 
                 mainWindow.webContents.send('server-message', { type, message });
+                mainWindow.webContents.send('server-status', { running: false });
             }
+            serverProcess = null;
             serverManuallyStopped = false;
         });
 
@@ -178,7 +180,6 @@ function stopServer() {
             }
             serverProcess.kill();
         }
-        serverProcess = null;
     } catch (err) {
         console.error('Error stopping server:', err);
         if (mainWindow) {
@@ -187,6 +188,7 @@ function stopServer() {
                 message: `❌ Error stopping server: ${err.message}`,
             });
         }
+        serverProcess = null;
     }
 }
 
