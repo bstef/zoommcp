@@ -16,6 +16,18 @@ try {
             console.log('Preload: getStatus called');
             ipcRenderer.send('get-status');
         },
+        checkToken: () => {
+            console.log('Preload: checkToken called');
+            ipcRenderer.send('check-token');
+        },
+        refreshToken: () => {
+            console.log('Preload: refreshToken called');
+            ipcRenderer.send('refresh-token');
+        },
+        getCurrentToken: () => {
+            console.log('Preload: getCurrentToken called');
+            ipcRenderer.send('get-current-token');
+        },
         onServerMessage: (callback) => {
             console.log('Preload: Setting up onServerMessage listener');
             ipcRenderer.on('server-message', (_event, data) => {
@@ -35,6 +47,13 @@ try {
             ipcRenderer.on('open-preferences', () => {
                 console.log('Preload: Received open-preferences');
                 callback();
+            });
+        },
+        onCurrentToken: (callback) => {
+            console.log('Preload: Setting up onCurrentToken listener');
+            ipcRenderer.on('current-token', (_event, data) => {
+                console.log('Preload: Received current-token');
+                callback(data);
             });
         },
         removeAllListeners: (channel) => {

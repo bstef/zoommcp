@@ -9,7 +9,55 @@ console.log('isDev:', process.argv.includes('--dev'));
 
 let mainWindow;
 let serverProcess;
+let tokenActionProcess;
 let isDev = process.argv.includes('--dev');
+const projectRoot = path.join(__dirname, '..');
+
+function unquote(value) {
+    const trimmed = value.trim();
+    if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+        return trimmed.slice(1, -1);
+    }
+    return trimmed;
+}
+
+function readTokenFromEnv() {
+    const envPath = path.join(projectRoot, '.env');
+    if (!fs.existsSync(envPath)) return '';
+    const content = fs.readFileSync(envPath, 'utf8');
+    const lines = content.split(/\r?\n/);
+    for (const line of lines) {
+        if (!line.startsWith('ZOOM_ACCESS_TOKEN=')) continue;
+        const value = line.slice('ZOOM_ACCESS_TOKEN='.length);
+        return unquote(value);
+    }
+    return '';
+}
+
+function readTokenFromClaudeConfig() {
+    const defaultPath = path.join(app.getPath('home'), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
+    const configPath = process.env.CLAUDE_CONFIG_FILE || defaultPath;
+    if (!fs.existsSync(configPath)) return '';
+
+    try {
+        const raw = fs.readFileSync(configPath, 'utf8');
+        const parsed = JSON.parse(raw);
+        return parsed?.mcpServers?.zoom?.env?.ZOOM_ACCESS_TOKEN || '';
+    } catch (err) {
+        console.error('Failed to parse Claude config for token:', err.message);
+        return '';
+    }
+}
+
+function getCurrentTokenInfo() {
+    const tokenFromEnv = readTokenFromEnv();
+    if (tokenFromEnv) return { token: tokenFromEnv, source: '.env' };
+
+    const tokenFromConfig = readTokenFromClaudeConfig();
+    if (tokenFromConfig) return { token: tokenFromConfig, source: 'Claude config' };
+
+    return { token: '', source: 'not found' };
+}
 
 // Ensure single instance
 const gotTheLock = app.requestSingleInstanceLock();
@@ -29,7 +77,6 @@ if (!gotTheLock) {
 function startServer() {
     try {
         console.log('Starting MCP server...');
-        const projectRoot = path.join(__dirname, '..');
         const runScript = path.join(projectRoot, 'run-mcp.sh');
 
         console.log('Project root:', projectRoot);
@@ -104,6 +151,57 @@ function stopServer() {
     } catch (err) {
         console.error('Error stopping server:', err);
     }
+}
+
+function sendWindowMessage(type, message) {
+    if (!mainWindow) return;
+    mainWindow.webContents.send('server-message', { type, message });
+}
+
+function runTokenAction(scriptName, args, actionLabel) {
+    if (tokenActionProcess && !tokenActionProcess.killed) {
+        sendWindowMessage('info', '⚠️ Another token action is already running');
+        return;
+    }
+
+    const scriptPath = path.join(projectRoot, 'scripts', scriptName);
+    const scriptCwd = path.dirname(scriptPath);
+
+    if (!fs.existsSync(scriptPath)) {
+        sendWindowMessage('stderr', `❌ Missing script: ${scriptName}`);
+        return;
+    }
+
+    sendWindowMessage('info', `⏳ Running token action: ${actionLabel}`);
+    sendWindowMessage('info', `📝 Running: ${scriptName}`);
+
+    tokenActionProcess = spawn('bash', [scriptPath, ...args], {
+        cwd: scriptCwd,
+        stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    tokenActionProcess.stdout.on('data', (data) => {
+        const message = data.toString().trim();
+        if (message) sendWindowMessage('stdout', message);
+    });
+
+    tokenActionProcess.stderr.on('data', (data) => {
+        const message = data.toString().trim();
+        if (message) sendWindowMessage('stderr', message);
+    });
+
+    tokenActionProcess.on('close', (code) => {
+        const success = code === 0;
+        sendWindowMessage(success ? 'stdout' : 'close', success
+            ? `✅ Token action complete: ${actionLabel}`
+            : `❌ Token action failed (${actionLabel}) with code ${code}`);
+        tokenActionProcess = null;
+    });
+
+    tokenActionProcess.on('error', (err) => {
+        sendWindowMessage('stderr', `❌ Token action error (${actionLabel}): ${err.message}`);
+        tokenActionProcess = null;
+    });
 }
 
 function createMenu() {
@@ -224,6 +322,21 @@ ipcMain.on('get-status', (event) => {
     const hasProcess = serverProcess != null && !serverProcess.killed;
     console.log('IPC: get-status, process running:', hasProcess);
     event.reply('server-status', { running: hasProcess });
+});
+
+ipcMain.on('check-token', () => {
+    console.log('IPC: check-token received');
+    runTokenAction('check_zoom_token.sh', ['-v'], 'check token');
+});
+
+ipcMain.on('refresh-token', () => {
+    console.log('IPC: refresh-token received');
+    runTokenAction('get_zoom_token.sh', ['-f'], 'refresh token');
+});
+
+ipcMain.on('get-current-token', (event) => {
+    const tokenInfo = getCurrentTokenInfo();
+    event.reply('current-token', tokenInfo);
 });
 
 // App lifecycle

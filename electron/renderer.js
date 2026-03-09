@@ -2,11 +2,15 @@
 document.addEventListener('DOMContentLoaded', () => {
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
+    const checkTokenBtn = document.getElementById('checkTokenBtn');
+    const refreshTokenBtn = document.getElementById('refreshTokenBtn');
     const clearBtn = document.getElementById('clearBtn');
     const logsContainer = document.getElementById('logsContainer');
     const statusIndicator = document.getElementById('statusIndicator');
+    const tokenContainer = document.getElementById('tokenContainer');
+    const tokenSource = document.getElementById('tokenSource');
 
-    if (!startBtn || !stopBtn || !clearBtn || !logsContainer || !statusIndicator) {
+    if (!startBtn || !stopBtn || !checkTokenBtn || !refreshTokenBtn || !clearBtn || !logsContainer || !statusIndicator || !tokenContainer || !tokenSource) {
         console.error('Failed to find required DOM elements');
         return;
     }
@@ -15,6 +19,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusText = statusIndicator.querySelector('.status-text');
 
     let serverRunning = false;
+    let tokenActionRunning = false;
+
+    function updateTokenButtons() {
+        checkTokenBtn.disabled = tokenActionRunning;
+        refreshTokenBtn.disabled = tokenActionRunning;
+    }
+
+    function updateTokenPanel(data) {
+        if (!data || !data.token) {
+            tokenContainer.textContent = 'No token found in .env or Claude config.';
+            tokenSource.textContent = 'Source: not found';
+            return;
+        }
+
+        tokenContainer.textContent = data.token;
+        tokenSource.textContent = `Source: ${data.source || 'unknown'}`;
+    }
 
     // Start server
     startBtn.addEventListener('click', () => {
@@ -32,6 +53,16 @@ document.addEventListener('DOMContentLoaded', () => {
     clearBtn.addEventListener('click', () => {
         logsContainer.innerHTML = '';
         logMessage('Logs cleared', 'info');
+    });
+
+    checkTokenBtn.addEventListener('click', () => {
+        if (tokenActionRunning) return;
+        window.electronAPI.checkToken();
+    });
+
+    refreshTokenBtn.addEventListener('click', () => {
+        if (tokenActionRunning) return;
+        window.electronAPI.refreshToken();
     });
 
     // Status panel elements
@@ -64,6 +95,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (msg.includes('Token refreshed')) {
             const refreshMatch = msg.match(/Token refreshed - (.+)/);
             if (refreshMatch) statusTokenVal.textContent = '✅ ' + refreshMatch[1].trim();
+        }
+        const tokenValidMatch = msg.match(/✅ VALID: Token expires at (.+)/);
+        if (tokenValidMatch) {
+            statusTokenVal.textContent = '✅ ' + tokenValidMatch[1].trim();
+            statusPanel.style.display = '';
+        }
+        if (msg.includes('EXPIRED: Token expired')) {
+            statusTokenVal.textContent = '⏰ Expired';
+            statusPanel.style.display = '';
+        }
+        if (msg.includes('MISSING: ZOOM_ACCESS_TOKEN')) {
+            statusTokenVal.textContent = '❌ Missing token';
+            statusPanel.style.display = '';
+        }
+        if (msg.includes('Token action complete: refresh token')) {
+            statusTokenVal.textContent = '✅ Refreshed';
+            statusPanel.style.display = '';
         }
 
         // MCP server
@@ -102,6 +150,16 @@ document.addEventListener('DOMContentLoaded', () => {
         logMessage(data.message, data.type);
         updateStatusPanel(data.message);
 
+        if (data.message.includes('Running token action:')) {
+            tokenActionRunning = true;
+            updateTokenButtons();
+        }
+        if (data.message.includes('Token action complete:') || data.message.includes('Token action failed')) {
+            tokenActionRunning = false;
+            updateTokenButtons();
+            window.electronAPI.getCurrentToken();
+        }
+
         // Update status based on messages
         if (data.message.includes('running on stdio')) {
             updateStatus(true);
@@ -113,6 +171,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Listen for status updates
     window.electronAPI.onServerStatus((data) => {
         updateStatus(data.running);
+    });
+
+    window.electronAPI.onCurrentToken((data) => {
+        updateTokenPanel(data);
     });
 
     // Log message helper
@@ -145,9 +207,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Check initial status on load
     window.electronAPI.getStatus();
+    window.electronAPI.checkToken();
+    window.electronAPI.getCurrentToken();
+
+    // Keep token status current while app is open.
+    const tokenPollTimer = setInterval(() => {
+        if (!tokenActionRunning) {
+            window.electronAPI.checkToken();
+            window.electronAPI.getCurrentToken();
+        }
+    }, 30000);
+
+    window.addEventListener('beforeunload', () => {
+        clearInterval(tokenPollTimer);
+    });
 
     // Handle preferences
     window.electronAPI.onOpenPreferences(() => {
         logMessage('Preferences feature coming soon', 'info');
     });
+
+    updateTokenButtons();
 });
