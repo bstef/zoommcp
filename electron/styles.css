@@ -57,13 +57,15 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
+    background: white;
+    padding: 4px;
     box-shadow: 0 4px 12px rgba(45, 140, 255, 0.4);
-    overflow: hidden;
 }
 
-.logo svg {
+.logo img {
     width: 100%;
     height: 100%;
+    object-fit: contain;
     display: block;
 }
 
