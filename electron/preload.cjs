@@ -24,6 +24,10 @@ try {
             console.log('Preload: refreshToken called');
             ipcRenderer.send('refresh-token');
         },
+        restartClaude: () => {
+            console.log('Preload: restartClaude called');
+            ipcRenderer.send('restart-claude');
+        },
         getCurrentToken: () => {
             console.log('Preload: getCurrentToken called');
             ipcRenderer.send('get-current-token');

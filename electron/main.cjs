@@ -374,6 +374,11 @@ ipcMain.on('refresh-token', () => {
     runTokenAction('get_zoom_token.sh', ['-f'], 'refresh token');
 });
 
+ipcMain.on('restart-claude', () => {
+    console.log('IPC: restart-claude received');
+    runTokenAction('restart_claude_app.sh', [], 'restart Claude');
+});
+
 ipcMain.on('get-current-token', (event) => {
     const tokenInfo = getCurrentTokenInfo();
     event.reply('current-token', tokenInfo);

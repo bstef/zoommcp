@@ -4,13 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const stopBtn = document.getElementById('stopBtn');
     const checkTokenBtn = document.getElementById('checkTokenBtn');
     const refreshTokenBtn = document.getElementById('refreshTokenBtn');
+    const restartClaudeBtn = document.getElementById('restartClaudeBtn');
     const clearBtn = document.getElementById('clearBtn');
     const logsContainer = document.getElementById('logsContainer');
     const statusIndicator = document.getElementById('statusIndicator');
     const tokenContainer = document.getElementById('tokenContainer');
     const tokenSource = document.getElementById('tokenSource');
 
-    if (!startBtn || !stopBtn || !checkTokenBtn || !refreshTokenBtn || !clearBtn || !logsContainer || !statusIndicator || !tokenContainer || !tokenSource) {
+    if (!startBtn || !stopBtn || !checkTokenBtn || !refreshTokenBtn || !restartClaudeBtn || !clearBtn || !logsContainer || !statusIndicator || !tokenContainer || !tokenSource) {
         console.error('Failed to find required DOM elements');
         return;
     }
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateTokenButtons() {
         checkTokenBtn.disabled = tokenActionRunning;
         refreshTokenBtn.disabled = tokenActionRunning;
+        restartClaudeBtn.disabled = tokenActionRunning;
     }
 
     function updateTokenPanel(data) {
@@ -63,6 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshTokenBtn.addEventListener('click', () => {
         if (tokenActionRunning) return;
         window.electronAPI.refreshToken();
+    });
+
+    restartClaudeBtn.addEventListener('click', () => {
+        if (tokenActionRunning) return;
+        window.electronAPI.restartClaude();
     });
 
     // Status panel elements
