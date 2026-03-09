@@ -10,6 +10,7 @@ console.log('isDev:', process.argv.includes('--dev'));
 let mainWindow;
 let serverProcess;
 let tokenActionProcess;
+let serverManuallyStopped = false;
 let isDev = process.argv.includes('--dev');
 const projectRoot = path.join(__dirname, '..');
 
@@ -94,6 +95,14 @@ function startServer() {
             return;
         }
 
+        serverManuallyStopped = false;
+        if (mainWindow) {
+            mainWindow.webContents.send('server-message', {
+                type: 'info',
+                message: '🚀 Starting Zoom MCP server...',
+            });
+        }
+
         serverProcess = spawn('bash', [runScript], {
             cwd: projectRoot,
             stdio: ['pipe', 'pipe', 'pipe'],
@@ -120,11 +129,26 @@ function startServer() {
         serverProcess.on('close', (code) => {
             console.log('Server process closed with code:', code);
             if (mainWindow) {
-                mainWindow.webContents.send('server-message', {
-                    type: 'close',
-                    message: `Server exited with code ${code}`,
-                });
+                let message;
+                let type;
+                
+                if (serverManuallyStopped) {
+                    message = '⏹️  MCP server stopped';
+                    type = 'info';
+                } else if (code === 0) {
+                    message = '✅ MCP server exited successfully';
+                    type = 'stdout';
+                } else if (code === null) {
+                    message = '⏹️  MCP server stopped';
+                    type = 'info';
+                } else {
+                    message = `❌ MCP server exited with code ${code}`;
+                    type = 'close';
+                }
+                
+                mainWindow.webContents.send('server-message', { type, message });
             }
+            serverManuallyStopped = false;
         });
 
         serverProcess.on('error', (err) => {
@@ -145,11 +169,24 @@ function stopServer() {
     try {
         if (serverProcess && !serverProcess.killed) {
             console.log('Killing server process');
+            serverManuallyStopped = true;
+            if (mainWindow) {
+                mainWindow.webContents.send('server-message', {
+                    type: 'info',
+                    message: '⏹️  Stopping MCP server...',
+                });
+            }
             serverProcess.kill();
         }
         serverProcess = null;
     } catch (err) {
         console.error('Error stopping server:', err);
+        if (mainWindow) {
+            mainWindow.webContents.send('server-message', {
+                type: 'stderr',
+                message: `❌ Error stopping server: ${err.message}`,
+            });
+        }
     }
 }
 
