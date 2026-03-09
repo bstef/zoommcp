@@ -41,6 +41,7 @@
     "productName": "Zoom MCP",
     "mac": {
       "category": "public.app-category.productivity",
+      "icon": "electron/icon.png",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "target": [
