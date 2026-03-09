@@ -249,7 +249,7 @@ main {
     border: 1px solid var(--border);
 }
 
-.btn-secondary:not(.btn-token-check):not(.btn-token-refresh):hover:not(:disabled) {
+.btn-secondary:not(.btn-token-check):not(.btn-token-refresh):not(.btn-restart-claude):hover:not(:disabled) {
     background: #eef2ff;
     border-color: #c7d2fe;
     transform: translateY(-1px);
