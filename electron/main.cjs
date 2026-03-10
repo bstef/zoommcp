@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, nativeImage } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -347,6 +347,25 @@ function createWindow() {
     }
 }
 
+function setMacAppIcon() {
+    if (process.platform !== 'darwin' || !app.dock) return;
+
+    const iconPath = path.join(__dirname, 'icon resized.png');
+    if (!fs.existsSync(iconPath)) {
+        console.warn('macOS icon file not found:', iconPath);
+        return;
+    }
+
+    const icon = nativeImage.createFromPath(iconPath);
+    if (icon.isEmpty()) {
+        console.warn('Failed to load macOS icon image from:', iconPath);
+        return;
+    }
+
+    app.dock.setIcon(icon);
+    console.log('macOS dock icon set:', iconPath);
+}
+
 // IPC handlers
 ipcMain.on('start-server', () => {
     console.log('IPC: start-server received');
@@ -390,6 +409,7 @@ console.log('Setting up app event listeners...');
 app.whenReady()
     .then(() => {
         console.log('App whenReady promise resolved');
+        setMacAppIcon();
         createWindow();
         createMenu();
     })
