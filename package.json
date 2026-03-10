@@ -40,6 +40,7 @@
     "appId": "com.zoommcp.app",
     "productName": "Zoom MCP",
     "mac": {
+      "icon": "electron/icon resized.png",
       "category": "public.app-category.productivity",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
