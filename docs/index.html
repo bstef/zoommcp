@@ -297,27 +297,82 @@
         /* ─── STATS ─── */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
             margin-bottom: 48px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .stat-pill {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 12px;
             border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--bg2);
+            border-radius: 6px;
+            background: var(--bg3);
             color: var(--muted);
-            font-size: 13px;
-            transition: border-color .2s, color .2s;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all .2s;
+            text-align: center;
         }
 
         .stat-pill:hover {
-            border-color: rgba(255, 255, 255, .2);
+            border-color: rgba(79, 110, 247, .4);
             color: var(--text);
+            background: var(--bg3);
+        }
+
+        /* ─── GITHUB CARDS ─── */
+        .github-btns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .github-card {
+            display: flex;
+            gap: 16px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg2);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .github-card:hover {
+            border-color: rgba(79, 110, 247, 0.6);
+            background: var(--bg3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(79, 110, 247, 0.15);
+        }
+
+        .github-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+
+        .github-info {
+            flex: 1;
+        }
+
+        .github-info h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .github-info p {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.4;
         }
 
         /* ─── ARCHITECTURE ─── */
@@ -816,43 +871,49 @@
             <a href="#app-features" class="btn btn-ghost">App Features</a>
             <a href="#tools" class="btn btn-ghost">Tools</a>
         </div>
-
-        <!-- Branch Buttons -->
-        <div class="hero-branch-btns">
-            <a href="https://github.com/bstef/zoommcp/tree/main" class="branch-btn">
-                <div class="branch-icon">📌</div>
-                <div class="branch-content">
-                    <div class="branch-name">Main</div>
-                    <div class="branch-desc">Core MCP server for Claude & ChatGPT</div>
-                </div>
-            </a>
-            <a href="https://github.com/bstef/zoommcp/tree/openai" class="branch-btn">
-                <div class="branch-icon">🤖</div>
-                <div class="branch-content">
-                    <div class="branch-name">OpenAI</div>
-                    <div class="branch-desc">OpenAI API integration for enhanced AI</div>
-                </div>
-            </a>
-            <a href="https://github.com/bstef/zoommcp/tree/feature/macos-app" class="branch-btn">
-                <div class="branch-icon">🍎</div>
-                <div class="branch-content">
-                    <div class="branch-name">macOS App</div>
-                    <div class="branch-desc">Native Electron app with GUI controls</div>
-                </div>
-            </a>
-        </div>
-    </div>
     </div>
 
     <!-- ─── STATS ─── -->
     <section id="overview">
         <div class="stats-grid">
-            <div class="stat-pill">📦 Node.js 18+</div>
-            <div class="stat-pill">⚡ MCP Server</div>
-            <div class="stat-pill">🎥 Zoom API v2</div>
-            <div class="stat-pill">🔄 stdio + HTTP</div>
-            <div class="stat-pill">🍎 Electron App</div>
-            <div class="stat-pill">📄 MIT License</div>
+            <div class="stat-pill"><span style="font-size: 14px;">📦</span> Node.js 18+</div>
+            <div class="stat-pill"><span style="font-size: 14px;">⚡</span> MCP Server</div>
+            <div class="stat-pill"><span style="font-size: 14px;">🎥</span> Zoom API v2</div>
+            <div class="stat-pill"><span style="font-size: 14px;">🔄</span> HTTP & stdio</div>
+            <div class="stat-pill"><span style="font-size: 14px;">🍎</span> macOS App</div>
+            <div class="stat-pill"><span style="font-size: 14px;">📄</span> MIT License</div>
+        </div>
+    </section>
+
+    <!-- ─── GITHUB REPOSITORIES ─── -->
+    <div class="divider"></div>
+    <section id="github">
+        <div class="section-label">GitHub Repositories</div>
+        <h2>Available Branches</h2>
+        <p class="section-desc">Choose your preferred branch based on your needs and requirements.</p>
+
+        <div class="github-btns">
+            <a href="https://github.com/bstef/zoommcp/tree/main" class="github-card">
+                <div class="github-icon">📌</div>
+                <div class="github-info">
+                    <h3>Main Branch</h3>
+                    <p>Core MCP server for Claude Desktop & ChatGPT Apps integration</p>
+                </div>
+            </a>
+            <a href="https://github.com/bstef/zoommcp/tree/openai" class="github-card">
+                <div class="github-icon">🤖</div>
+                <div class="github-info">
+                    <h3>OpenAI Branch</h3>
+                    <p>Enhanced AI capabilities with OpenAI API integration</p>
+                </div>
+            </a>
+            <a href="https://github.com/bstef/zoommcp/tree/feature/macos-app" class="github-card">
+                <div class="github-icon">🍎</div>
+                <div class="github-info">
+                    <h3>macOS App Branch</h3>
+                    <p>Native Electron desktop app with GUI controls and real-time logs</p>
+                </div>
+            </a>
         </div>
     </section>
 
