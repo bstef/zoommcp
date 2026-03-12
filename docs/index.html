@@ -1,890 +1,1199 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Zoom MCP — Claude + Zoom Integration</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --blue:    #4F6EF7;
-      --blue-dk: #3a56d4;
-      --zoom:    #2D8CFF;
-      --claude:  #D97706;
-      --green:   #22c55e;
-      --red:     #ef4444;
-      --purple:  #8b5cf6;
-      --bg:      #0d0f1a;
-      --bg2:     #13162a;
-      --bg3:     #1a1d2e;
-      --border:  rgba(255,255,255,0.08);
-      --text:    #e2e8f0;
-      --muted:   #6b7280;
-      --radius:  14px;
-    }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-    }
-
-    /* ─── NAV ─── */
-    nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(13,15,26,0.85);
-      backdrop-filter: blur(14px);
-      border-bottom: 1px solid var(--border);
-      padding: 0 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 56px;
-    }
-
-    .nav-brand {
-      font-weight: 700;
-      font-size: 15px;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .nav-brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite; }
-
-    @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 8px var(--green)} 50%{opacity:.5;box-shadow:0 0 16px var(--green)} }
-
-    .nav-links { display: flex; gap: 24px; }
-    .nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; transition: color .15s; }
-    .nav-links a:hover { color: var(--text); }
-
-    /* ─── HERO ─── */
-    .hero {
-      padding: 80px 32px 64px;
-      text-align: center;
-      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(79,110,247,.18) 0%, transparent 70%);
-    }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 5px 14px;
-      border: 1px solid rgba(79,110,247,.4);
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #93c5fd;
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      margin-bottom: 24px;
-    }
-
-    .hero h1 {
-      font-size: clamp(32px, 5vw, 56px);
-      font-weight: 800;
-      letter-spacing: -1.5px;
-      color: #fff;
-      line-height: 1.1;
-      margin-bottom: 20px;
-    }
-
-    .hero h1 .zoom  { color: var(--zoom); }
-    .hero h1 .claude { color: var(--claude); }
-
-    .hero-sub {
-      font-size: 17px;
-      color: var(--muted);
-      max-width: 560px;
-      margin: 0 auto 36px;
-    }
-
-    .hero-btns { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
-
-    .btn {
-      padding: 11px 24px;
-      border-radius: 9px;
-      font-size: 13px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all .15s;
-    }
-
-    .btn-primary { background: var(--blue); color: #fff; box-shadow: 0 4px 18px rgba(79,110,247,.4); }
-    .btn-primary:hover { background: var(--blue-dk); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(79,110,247,.5); }
-    .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
-    .btn-ghost:hover { background: var(--bg3); border-color: rgba(255,255,255,.2); }
-
-    /* ─── SECTION ─── */
-    section { padding: 72px 32px; max-width: 1100px; margin: 0 auto; }
-
-    .section-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--blue);
-      margin-bottom: 8px;
-    }
-
-    h2 {
-      font-size: clamp(22px, 3vw, 32px);
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: -.5px;
-      margin-bottom: 12px;
-    }
-
-    .section-desc { font-size: 15px; color: var(--muted); max-width: 560px; margin-bottom: 48px; }
-
-    /* ─── ARCHITECTURE ─── */
-    .arch-wrapper {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 48px 32px;
-      display: flex;
-      justify-content: center;
-      overflow-x: auto;
-    }
-
-    .arch {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      min-width: max-content;
-    }
-
-    .arch-node {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px 28px;
-      text-align: center;
-      min-width: 140px;
-      position: relative;
-    }
-
-    .arch-node .icon { font-size: 28px; margin-bottom: 8px; }
-    .arch-node .label { font-size: 13px; font-weight: 700; color: #fff; }
-    .arch-node .sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
-
-    .arch-node.accent-blue  { border-color: rgba(79,110,247,.5); box-shadow: 0 0 24px rgba(79,110,247,.15); }
-    .arch-node.accent-zoom  { border-color: rgba(45,140,255,.5); box-shadow: 0 0 24px rgba(45,140,255,.15); }
-    .arch-node.accent-claude{ border-color: rgba(217,119,6,.5);  box-shadow: 0 0 24px rgba(217,119,6,.15); }
-    .arch-node.accent-green { border-color: rgba(34,197,94,.5);  box-shadow: 0 0 24px rgba(34,197,94,.15); }
-
-    .arch-arrow {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 0 16px;
-    }
-
-    .arch-arrow .line {
-      width: 60px;
-      height: 2px;
-      background: linear-gradient(90deg, rgba(255,255,255,.12), rgba(79,110,247,.6), rgba(255,255,255,.12));
-      position: relative;
-    }
-
-    .arch-arrow .line::after {
-      content: '';
-      position: absolute;
-      right: -6px;
-      top: -4px;
-      border: 5px solid transparent;
-      border-left-color: rgba(79,110,247,.8);
-    }
-
-    .arch-arrow .note { font-size: 10px; color: var(--muted); }
-
-    /* ─── FEATURE GRID ─── */
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-    }
-
-    .feature-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      transition: border-color .2s, transform .2s;
-    }
-
-    .feature-card:hover { border-color: rgba(79,110,247,.4); transform: translateY(-2px); }
-
-    .feature-card .icon { font-size: 22px; margin-bottom: 12px; }
-    .feature-card h3 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-    .feature-card p  { font-size: 13px; color: var(--muted); line-height: 1.55; }
-
-    /* ─── APP MOCKUP ─── */
-    .app-mockup-wrapper {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-
-    .mockup-titlebar {
-      background: #1a1d2e;
-      border-bottom: 1px solid var(--border);
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .mockup-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-    .mockup-dot.r { background: #ff5f57; }
-    .mockup-dot.y { background: #febc2e; }
-    .mockup-dot.g { background: #28c840; }
-    .mockup-title { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.35); text-transform: uppercase; letter-spacing: .8px; margin-left: 8px; }
-
-    .mockup-body { padding: 24px; }
-
-    .mockup-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: linear-gradient(135deg, #1a1d2e 0%, #2d3154 100%);
-      border-radius: 10px;
-      padding: 16px 20px;
-      margin-bottom: 16px;
-    }
-
-    .mockup-logo { display: flex; align-items: center; gap: 10px; }
-    .mockup-logo-icon { width: 40px; height: 40px; background: #2D8CFF; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-    .mockup-logo-text { font-size: 16px; font-weight: 700; color: #fff; }
-    .mockup-logo-sub  { font-size: 10px; color: rgba(255,255,255,.4); }
-    .mockup-badge { display: flex; align-items: center; gap: 6px; padding: 5px 12px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; font-size: 11px; color: rgba(255,255,255,.6); }
-    .mockup-badge .dot { width: 6px; height: 6px; border-radius: 50%; }
-    .mockup-badge .dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
-    .mockup-badge .dot.offline { background: #4b5563; }
-
-    .mockup-status-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .mockup-stat {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .mockup-stat .si { font-size: 18px; }
-    .mockup-stat .sl { font-size: 9px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
-    .mockup-stat .sv { font-size: 12px; font-weight: 500; color: #fff; margin-top: 2px; }
-
-    .mockup-btns {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .mb { padding: 8px 16px; border-radius: 7px; font-size: 11px; font-weight: 600; border: none; cursor: default; }
-    .mb-start  { background: var(--blue); color: #fff; }
-    .mb-stop   { background: var(--bg3); color: var(--red); border: 1.5px solid rgba(239,68,68,.4); }
-    .mb-check  { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff; }
-    .mb-refresh{ background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; }
-    .mb-claude { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #fff; }
-
-    .mockup-terminal {
-      background: #12141f;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    .mockup-term-header {
-      background: #1a1d2e;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      padding: 8px 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .term-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .term-dot.r { background: #ff5f57; } .term-dot.y { background: #febc2e; } .term-dot.g { background: #28c840; }
-    .term-title { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: .8px; margin-left: 6px; }
-
-    .mockup-term-body {
-      padding: 12px 14px;
-      font-family: 'SF Mono', 'Monaco', monospace;
-      font-size: 11px;
-      line-height: 1.7;
-    }
-
-    .tl-info   { color: rgba(255,255,255,.4); }
-    .tl-stdout { color: #86efac; }
-    .tl-token  { color: #93c5fd; }
-    .tl-warn   { color: #fbbf24; }
-
-    /* ─── TOOLS GRID ─── */
-    .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 12px;
-    }
-
-    .tool-chip {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      transition: border-color .2s;
-    }
-
-    .tool-chip:hover { border-color: rgba(79,110,247,.4); }
-    .tool-chip .ti { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-    .tool-chip .tn { font-size: 12px; font-weight: 600; color: #fff; font-family: 'SF Mono', monospace; }
-    .tool-chip .td { font-size: 11px; color: var(--muted); margin-top: 3px; }
-
-    /* ─── COMMITS ─── */
-    .commits-list { display: flex; flex-direction: column; gap: 0; }
-
-    .commit {
-      display: flex;
-      gap: 16px;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--border);
-      position: relative;
-    }
-
-    .commit:last-child { border-bottom: none; }
-
-    .commit-hash {
-      font-family: 'SF Mono', monospace;
-      font-size: 11px;
-      color: var(--blue);
-      background: rgba(79,110,247,.12);
-      border: 1px solid rgba(79,110,247,.2);
-      border-radius: 5px;
-      padding: 2px 7px;
-      flex-shrink: 0;
-      height: fit-content;
-      margin-top: 2px;
-    }
-
-    .commit-msg { font-size: 13px; color: var(--text); flex: 1; }
-    .commit-tag {
-      flex-shrink: 0;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 5px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-      height: fit-content;
-      margin-top: 2px;
-    }
-
-    .tag-feat  { background: rgba(34,197,94,.15); color: #86efac; }
-    .tag-fix   { background: rgba(239,68,68,.15);  color: #fca5a5; }
-    .tag-chore { background: rgba(107,114,128,.15); color: #9ca3af; }
-    .tag-ui    { background: rgba(139,92,246,.15);  color: #c4b5fd; }
-
-    /* ─── TOKEN FLOW ─── */
-    .flow-wrapper {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 40px 32px;
-    }
-
-    .flow-steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 0;
-      position: relative;
-    }
-
-    .flow-step {
-      text-align: center;
-      padding: 16px;
-      position: relative;
-    }
-
-    .flow-step:not(:last-child)::after {
-      content: '→';
-      position: absolute;
-      right: -8px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--muted);
-      font-size: 18px;
-      z-index: 1;
-    }
-
-    .flow-icon {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: var(--bg3);
-      border: 2px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      margin: 0 auto 12px;
-    }
-
-    .flow-step .fs-label { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 4px; }
-    .flow-step .fs-sub   { font-size: 11px; color: var(--muted); }
-
-    /* ─── FOOTER ─── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 32px;
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    footer a { color: var(--muted); text-decoration: none; }
-    footer a:hover { color: var(--text); }
-
-    .divider { width: 100%; height: 1px; background: var(--border); max-width: 1100px; margin: 0 auto; }
-
-    @media (max-width: 640px) {
-      nav { padding: 0 16px; }
-      .nav-links { display: none; }
-      .hero { padding: 48px 16px 40px; }
-      section { padding: 48px 16px; }
-      .arch { flex-direction: column; gap: 12px; }
-      .arch-arrow { transform: rotate(90deg); }
-      .mockup-status-row { grid-template-columns: 1fr; }
-      .flow-steps { grid-template-columns: 1fr; }
-      .flow-step::after { display: none; }
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zoom MCP — Claude + Zoom Integration</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --blue: #4F6EF7;
+            --blue-dk: #3a56d4;
+            --zoom: #2D8CFF;
+            --claude: #D97706;
+            --green: #22c55e;
+            --red: #ef4444;
+            --purple: #8b5cf6;
+            --bg: #0d0f1a;
+            --bg2: #13162a;
+            --bg3: #1a1d2e;
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #e2e8f0;
+            --muted: #6b7280;
+            --radius: 14px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* ─── NAV ─── */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(13, 15, 26, 0.85);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+        }
+
+        .nav-brand {
+            font-weight: 700;
+            font-size: 15px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-brand .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 8px var(--green)
+            }
+
+            50% {
+                opacity: .5;
+                box-shadow: 0 0 16px var(--green)
+            }
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color .15s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        /* ─── HERO ─── */
+        .hero {
+            padding: 80px 32px 64px;
+            text-align: center;
+            background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(79, 110, 247, .18) 0%, transparent 70%);
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 14px;
+            border: 1px solid rgba(79, 110, 247, .4);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #93c5fd;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            color: #fff;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 .zoom {
+            color: var(--zoom);
+        }
+
+        .hero h1 .claude {
+            color: var(--claude);
+        }
+
+        .hero-sub {
+            font-size: 17px;
+            color: var(--muted);
+            max-width: 560px;
+            margin: 0 auto 36px;
+        }
+
+        .hero-btns {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 11px 24px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all .15s;
+        }
+
+        .btn-primary {
+            background: var(--blue);
+            color: #fff;
+            box-shadow: 0 4px 18px rgba(79, 110, 247, .4);
+        }
+
+        .btn-primary:hover {
+            background: var(--blue-dk);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(79, 110, 247, .5);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg3);
+            border-color: rgba(255, 255, 255, .2);
+        }
+
+        /* ─── SECTION ─── */
+        section {
+            padding: 72px 32px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--blue);
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            font-size: clamp(22px, 3vw, 32px);
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -.5px;
+            margin-bottom: 12px;
+        }
+
+        .section-desc {
+            font-size: 15px;
+            color: var(--muted);
+            max-width: 560px;
+            margin-bottom: 48px;
+        }
+
+        /* ─── STATS ─── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 48px;
+        }
+
+        .stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg2);
+            color: var(--muted);
+            font-size: 13px;
+            transition: border-color .2s, color .2s;
+        }
+
+        .stat-pill:hover {
+            border-color: rgba(255, 255, 255, .2);
+            color: var(--text);
+        }
+
+        /* ─── ARCHITECTURE ─── */
+        .arch-wrapper {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 48px 32px;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            margin-bottom: 48px;
+        }
+
+        .arch {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            min-width: max-content;
+        }
+
+        .arch-node {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 28px;
+            text-align: center;
+            min-width: 140px;
+            position: relative;
+        }
+
+        .arch-node .icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .arch-node .label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .arch-node .sub {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .arch-node.accent-blue {
+            border-color: rgba(79, 110, 247, .5);
+            box-shadow: 0 0 24px rgba(79, 110, 247, .15);
+        }
+
+        .arch-node.accent-zoom {
+            border-color: rgba(45, 140, 255, .5);
+            box-shadow: 0 0 24px rgba(45, 140, 255, .15);
+        }
+
+        .arch-node.accent-claude {
+            border-color: rgba(217, 119, 6, .5);
+            box-shadow: 0 0 24px rgba(217, 119, 6, .15);
+        }
+
+        .arch-node.accent-green {
+            border-color: rgba(34, 197, 94, .5);
+            box-shadow: 0 0 24px rgba(34, 197, 94, .15);
+        }
+
+        .arch-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 0 16px;
+        }
+
+        .arch-arrow .line {
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, .12), rgba(79, 110, 247, .6), rgba(255, 255, 255, .12));
+            position: relative;
+        }
+
+        .arch-arrow .line::after {
+            content: '';
+            position: absolute;
+            right: -6px;
+            top: -4px;
+            border: 5px solid transparent;
+            border-left-color: rgba(79, 110, 247, .8);
+        }
+
+        .arch-arrow .note {
+            font-size: 10px;
+            color: var(--muted);
+        }
+
+        /* ─── FEATURE GRID ─── */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .feature-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            transition: border-color .2s, transform .2s;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(79, 110, 247, .4);
+            transform: translateY(-2px);
+        }
+
+        .feature-card .icon {
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+
+        .feature-card h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        /* ─── CODE BLOCK ─── */
+        .code-block {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin: 24px 0;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--bg3);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .code-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .code-dot.r {
+            background: #ef4444;
+        }
+
+        .code-dot.y {
+            background: #f59e0b;
+        }
+
+        .code-dot.g {
+            background: #22c55e;
+        }
+
+        .code-title {
+            font-size: 11px;
+            color: var(--muted);
+            font-family: monospace;
+        }
+
+        .code-content {
+            padding: 20px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-x: auto;
+            color: #93c5fd;
+        }
+
+        /* ─── APP MOCKUP ─── */
+        .app-mockup-wrapper {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 48px;
+        }
+
+        .mockup-titlebar {
+            background: #1a1d2e;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mockup-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .mockup-dot.r {
+            background: #ff5f57;
+        }
+
+        .mockup-dot.y {
+            background: #febc2e;
+        }
+
+        .mockup-dot.g {
+            background: #28c940;
+        }
+
+        .mockup-content {
+            padding: 32px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .mockup-content code {
+            background: var(--bg3);
+            color: #93c5fd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        /* ─── TOOLS GRID ─── */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 48px;
+        }
+
+        .tool-chip {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            transition: border-color .2s;
+        }
+
+        .tool-chip:hover {
+            border-color: rgba(79, 110, 247, .4);
+        }
+
+        .tool-chip .ti {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .tool-chip .tn {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .tool-chip .td {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        /* ─── COMMITS ─── */
+        .commits-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .commit {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-top: none;
+            background: var(--bg2);
+        }
+
+        .commit:first-child {
+            border-top: 1px solid var(--border);
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .commit:last-child {
+            border-radius: 0 0 var(--radius) var(--radius);
+        }
+
+        .commit-hash {
+            font-family: monospace;
+            font-size: 11px;
+            color: #93c5fd;
+            min-width: 60px;
+            flex-shrink: 0;
+        }
+
+        .commit-msg {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .commit-tag {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            margin-left: auto;
+            display: inline-block;
+        }
+
+        .tag-feat {
+            background: rgba(34, 197, 94, .15);
+            color: #86efac;
+        }
+
+        .tag-fix {
+            background: rgba(239, 68, 68, .15);
+            color: #fca5a5;
+        }
+
+        .tag-chore {
+            background: rgba(107, 114, 128, .15);
+            color: #9ca3af;
+        }
+
+        .tag-ui {
+            background: rgba(139, 92, 246, .15);
+            color: #c4b5fd;
+        }
+
+        /* ─── ENV TABLE ─── */
+        .env-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            font-size: 13px;
+            margin-bottom: 48px;
+        }
+
+        .env-table tr {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .env-table tr:last-child {
+            border-bottom: none;
+        }
+
+        .env-table th {
+            background: var(--bg3);
+            color: var(--text);
+            font-weight: 600;
+            padding: 12px 20px;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .env-table td {
+            padding: 12px 20px;
+            color: var(--muted);
+        }
+
+        .env-table .key {
+            font-family: monospace;
+            color: #93c5fd;
+            font-weight: 500;
+        }
+
+        .env-req {
+            color: #fca5a5;
+            font-weight: 600;
+        }
+
+        .env-opt {
+            color: #fbbf24;
+            font-weight: 500;
+        }
+
+        /* ─── FLOW ─── */
+        .flow-wrapper {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px 32px;
+            margin-bottom: 48px;
+        }
+
+        .flow-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0;
+            position: relative;
+        }
+
+        .flow-step {
+            text-align: center;
+            padding: 16px;
+            position: relative;
+        }
+
+        .flow-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 18px;
+            z-index: 1;
+        }
+
+        .flow-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--bg3);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin: 0 auto 12px;
+        }
+
+        .flow-step .fs-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .flow-step .fs-sub {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        /* ─── FOOTER ─── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 32px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        footer a {
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: var(--text);
+        }
+
+        .divider {
+            width: 100%;
+            height: 1px;
+            background: var(--border);
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 640px) {
+            nav {
+                padding: 0 16px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 48px 16px 40px;
+            }
+
+            section {
+                padding: 48px 16px;
+            }
+
+            .arch {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .arch-arrow {
+                transform: rotate(90deg);
+            }
+
+            .flow-steps {
+                grid-template-columns: 1fr;
+            }
+
+            .flow-step::after {
+                display: none;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-<!-- ─── NAV ─── -->
-<nav>
-  <div class="nav-brand">
-    <div class="dot"></div>
-    Zoom MCP
-  </div>
-  <div class="nav-links">
-    <a href="#architecture">Architecture</a>
-    <a href="#app">macOS App</a>
-    <a href="#tools">Tools</a>
-    <a href="#commits">Changelog</a>
-    <a href="https://github.com/bstef/zoommcp">GitHub</a>
-  </div>
-</nav>
-
-<!-- ─── HERO ─── -->
-<div class="hero">
-  <div class="hero-badge">
-    <span>⚡</span> Model Context Protocol
-  </div>
-  <h1>
-    <span class="zoom">Zoom</span> meets<br>
-    <span class="claude">Claude AI</span>
-  </h1>
-  <p class="hero-sub">
-    Manage meetings, tokens, and users through natural language.
-    A full MCP server with a native macOS desktop app.
-  </p>
-  <div class="hero-btns">
-    <a href="#architecture" class="btn btn-primary">View Architecture</a>
-    <a href="#app" class="btn btn-ghost">macOS App</a>
-  </div>
-</div>
-
-<!-- ─── ARCHITECTURE ─── -->
-<div class="divider"></div>
-<section id="architecture">
-  <div class="section-label">How It Works</div>
-  <h2>System Architecture</h2>
-  <p class="section-desc">A secure bridge connecting Claude Desktop to the Zoom API via the Model Context Protocol.</p>
-
-  <div class="arch-wrapper">
-    <div class="arch">
-      <div class="arch-node accent-claude">
-        <div class="icon">🖥️</div>
-        <div class="label">Claude Desktop</div>
-        <div class="sub">AI Interface</div>
-      </div>
-
-      <div class="arch-arrow">
-        <div class="line"></div>
-        <div class="note">stdio / MCP</div>
-      </div>
-
-      <div class="arch-node accent-blue">
-        <div class="icon">⚙️</div>
-        <div class="label">MCP Server</div>
-        <div class="sub">index.js</div>
-      </div>
-
-      <div class="arch-arrow">
-        <div class="line"></div>
-        <div class="note">HTTPS / OAuth</div>
-      </div>
-
-      <div class="arch-node accent-zoom">
-        <div class="icon">📹</div>
-        <div class="label">Zoom API</div>
-        <div class="sub">REST</div>
-      </div>
-    </div>
-  </div>
-
-  <br>
-
-  <div class="feature-grid">
-    <div class="feature-card">
-      <div class="icon">🔑</div>
-      <h3>Smart Token Management</h3>
-      <p>Validates before fetching. Only requests a new token when the current one is expired or within 5 minutes of expiry. Atomic writes for iCloud Drive safety.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">🔄</div>
-      <h3>Auto Token Refresh</h3>
-      <p>Background monitor refreshes tokens automatically. Anti-loop protection with 30s cooldown and max 3 failure limit before disabling to prevent restart loops.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">🚀</div>
-      <h3>Claude Desktop Integration</h3>
-      <p>Multi-method startup verification with up to 15 retries. Auto-reopens Claude if it closes while the server is running.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">🛡️</div>
-      <h3>iCloud-Safe Launcher</h3>
-      <p><code>launch-mcp.js</code> avoids shell execution restrictions when running from Claude on macOS paths with spaces or iCloud Drive.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">📊</div>
-      <h3>Live Status Monitoring</h3>
-      <p>Token expiry countdown updates every 60 seconds with color-coded indicators: ✅ fresh, 📊 expiring soon, ⚠️ critical.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">🍎</div>
-      <h3>Native macOS App</h3>
-      <p>Electron app with real-time logs, one-click server controls, token panel, and Claude restart — no terminal required.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ─── macOS APP ─── -->
-<div class="divider"></div>
-<section id="app">
-  <div class="section-label">macOS Desktop</div>
-  <h2>Native Electron App</h2>
-  <p class="section-desc">A polished desktop interface to run and manage Zoom MCP without touching the terminal.</p>
-
-  <div class="app-mockup-wrapper">
-    <div class="mockup-titlebar">
-      <div class="mockup-dot r"></div>
-      <div class="mockup-dot y"></div>
-      <div class="mockup-dot g"></div>
-      <div class="mockup-title">Zoom MCP</div>
-    </div>
-    <div class="mockup-body">
-
-      <!-- Header -->
-      <div class="mockup-header">
-        <div class="mockup-logo">
-          <div class="mockup-logo-icon">📹</div>
-          <div>
-            <div class="mockup-logo-text">Zoom MCP</div>
-            <div class="mockup-logo-sub">Model Context Protocol · Claude AI</div>
-          </div>
+    <!-- ─── NAV ─── -->
+    <nav>
+        <div class="nav-brand">
+            <div class="dot"></div>
+            Zoom MCP
         </div>
-        <div class="mockup-badge">
-          <div class="dot online"></div>
-          Online
+        <div class="nav-links">
+            <a href="#architecture">Architecture</a>
+            <a href="#features">Features</a>
+            <a href="#app">macOS App</a>
+            <a href="#tools">Tools</a>
+            <a href="#setup">Setup</a>
+            <a href="#commits">Changelog</a>
+            <a href="https://github.com/bstef/zoommcp">GitHub</a>
         </div>
-      </div>
+    </nav>
 
-      <!-- Status cards -->
-      <div class="mockup-status-row">
-        <div class="mockup-stat">
-          <div class="si">🖥️</div>
-          <div>
-            <div class="sl">Claude Desktop</div>
-            <div class="sv">✅ Running</div>
-          </div>
+    <!-- ─── HERO ─── -->
+    <div class="hero">
+        <div class="hero-badge">
+            <span>⚡</span> Model Context Protocol
         </div>
-        <div class="mockup-stat">
-          <div class="si">🔑</div>
-          <div>
-            <div class="sl">Token</div>
-            <div class="sv">57m 12s</div>
-          </div>
+        <h1>
+            <span class="zoom">Zoom</span> meets<br>
+            <span class="claude">Claude AI</span>
+        </h1>
+        <p class="hero-sub">
+            Manage meetings, tokens, and users through natural language.
+            A full MCP server with a native macOS desktop app.
+        </p>
+        <div class="hero-btns">
+            <a href="#architecture" class="btn btn-primary">View Architecture</a>
+            <a href="https://github.com/bstef/zoommcp" class="btn btn-ghost">GitHub</a>
         </div>
-        <div class="mockup-stat">
-          <div class="si">⚡</div>
-          <div>
-            <div class="sl">MCP Server</div>
-            <div class="sv">✅ Active</div>
-          </div>
+    </div>
+
+    <!-- ─── STATS ─── -->
+    <section id="overview">
+        <div class="stats-grid">
+            <div class="stat-pill">📦 Node.js 18+</div>
+            <div class="stat-pill">⚡ MCP Server</div>
+            <div class="stat-pill">🎥 Zoom API v2</div>
+            <div class="stat-pill">🔄 stdio + HTTP</div>
+            <div class="stat-pill">🍎 Electron App</div>
+            <div class="stat-pill">📄 MIT License</div>
         </div>
-      </div>
+    </section>
 
-      <!-- Buttons -->
-      <div class="mockup-btns">
-        <div class="mb mb-start">▶ Start Server</div>
-        <div class="mb mb-stop">■ Stop Server</div>
-        <div class="mb mb-check">Check Token</div>
-        <div class="mb mb-refresh">Refresh Token</div>
-        <div class="mb mb-claude">Restart Claude</div>
-      </div>
+    <!-- ─── ARCHITECTURE ─── -->
+    <div class="divider"></div>
+    <section id="architecture">
+        <div class="section-label">How It Works</div>
+        <h2>System Architecture</h2>
+        <p class="section-desc">A secure bridge connecting Claude Desktop to the Zoom API via the Model Context
+            Protocol.</p>
 
-      <!-- Terminal -->
-      <div class="mockup-terminal">
-        <div class="mockup-term-header">
-          <div class="term-dot r"></div>
-          <div class="term-dot y"></div>
-          <div class="term-dot g"></div>
-          <div class="term-title">Zoom MCP Server Logs</div>
+        <div class="arch-wrapper">
+            <div class="arch">
+                <div class="arch-node accent-claude">
+                    <div class="icon">🖥️</div>
+                    <div class="label">Claude Desktop</div>
+                    <div class="sub">AI Interface</div>
+                </div>
+
+                <div class="arch-arrow">
+                    <div class="line"></div>
+                    <div class="note">stdio / MCP</div>
+                </div>
+
+                <div class="arch-node accent-blue">
+                    <div class="icon">⚙️</div>
+                    <div class="label">MCP Server</div>
+                    <div class="sub">index.js</div>
+                </div>
+
+                <div class="arch-arrow">
+                    <div class="line"></div>
+                    <div class="note">HTTPS / OAuth</div>
+                </div>
+
+                <div class="arch-node accent-zoom">
+                    <div class="icon">📹</div>
+                    <div class="label">Zoom API</div>
+                    <div class="sub">REST</div>
+                </div>
+            </div>
         </div>
-        <div class="mockup-term-body">
-          <div class="tl-stdout">✅ Claude Desktop is running</div>
-          <div class="tl-stdout">✅ Zoom token is still valid. No refresh needed.</div>
-          <div class="tl-info">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
-          <div class="tl-stdout">🚀 Zoom MCP Server is running on stdio</div>
-          <div class="tl-stdout">🔄 Token monitoring active — updates every 60s</div>
-          <div class="tl-info">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
-          <div class="tl-token">🔑 Token Status: ✅ Expires in 57m 12s (at 3:44:00 PM)</div>
+    </section>
+
+    <!-- ─── FEATURES ─── -->
+    <div class="divider"></div>
+    <section id="features">
+        <div class="section-label">Key Capabilities</div>
+        <h2>Everything You Need</h2>
+        <p class="section-desc">Smart token management, auto-refresh, and seamless Claude integration with native macOS
+            support.</p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="icon">🔑</div>
+                <h3>Smart Token Management</h3>
+                <p>Validates before fetching. Only requests a new token when expired or within 5 minutes of expiry.
+                    Atomic writes for iCloud Drive safety.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔄</div>
+                <h3>Auto Token Refresh</h3>
+                <p>Background monitor refreshes tokens automatically. Anti-loop protection with 30s cooldown and max 3
+                    failure limit.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🚀</div>
+                <h3>Claude Desktop Integration</h3>
+                <p>Multi-method startup verification with up to 15 retries. Auto-reopens Claude if it closes while the
+                    server is running.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🛡️</div>
+                <h3>iCloud-Safe Launcher</h3>
+                <p><code>launch-mcp.js</code> avoids shell execution restrictions when running from Claude on macOS
+                    paths with spaces or iCloud Drive.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📊</div>
+                <h3>Live Status Monitoring</h3>
+                <p>Token expiry countdown updates every 60 seconds with color-coded indicators: ✅ fresh, 📊 expiring
+                    soon, ⚠️ critical.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🍎</div>
+                <h3>Native macOS App</h3>
+                <p>Electron app with real-time logs, one-click server controls, token panel, and Claude restart — no
+                    terminal required.</p>
+            </div>
         </div>
-      </div>
+    </section>
 
-    </div>
-  </div>
+    <!-- ─── macOS APP ─── -->
+    <div class="divider"></div>
+    <section id="app">
+        <div class="section-label">macOS Desktop</div>
+        <h2>Native Electron App</h2>
+        <p class="section-desc">A polished desktop interface to run and manage Zoom MCP without touching the terminal.
+        </p>
 
-  <br>
+        <div class="app-mockup-wrapper">
+            <div class="mockup-titlebar">
+                <div class="mockup-dot r"></div>
+                <div class="mockup-dot y"></div>
+                <div class="mockup-dot g"></div>
+            </div>
+            <div class="mockup-content"
+                style="min-height: 300px; display: flex; align-items: center; justify-content: center; text-align: center;">
+                <div>
+                    <p style="color: #93c5fd; font-size:16px; margin-bottom: 8px;">🍎 Zoom MCP</p>
+                    <p>Native macOS app with real-time server control and token management</p>
+                </div>
+            </div>
+        </div>
 
-  <div class="feature-grid">
-    <div class="feature-card">
-      <div class="icon">▶️</div>
-      <h3>One-Click Server Control</h3>
-      <p>Start and stop the MCP server instantly. Server state is reflected in real time across the status dashboard and badge.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">📋</div>
-      <h3>Live Log Viewer</h3>
-      <p>Terminal-style log panel streams server stdout/stderr in real time with color-coded output: green for status, blue for token info, yellow for warnings.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">🔐</div>
-      <h3>Token Panel</h3>
-      <p>Displays the current Zoom access token with source attribution (.env or Claude config). Check and refresh from the app without the terminal.</p>
-    </div>
-    <div class="feature-card">
-      <div class="icon">🔁</div>
-      <h3>Restart Claude</h3>
-      <p>Restart Claude Desktop directly from the app with the purple gradient button — useful after token refreshes that require Claude to reload its config.</p>
-    </div>
-  </div>
+        <div class="feature-grid" style="margin-top: 32px;">
+            <div class="feature-card">
+                <div class="icon">🎮</div>
+                <h3>One-Click Controls</h3>
+                <p>Start, stop, and restart the MCP server directly from the app interface.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📋</div>
+                <h3>Live Log Stream</h3>
+                <p>Real-time logs with color-coded events for debugging and monitoring.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔐</div>
+                <h3>Token Panel</h3>
+                <p>View current token, expiry time, and get fresh tokens with one click.</p>
+            </div>
+        </div>
 
-  <br>
+        <div class="flow-wrapper" style="margin-top: 48px;">
+            <div class="section-label" style="text-align:center;margin-bottom:28px;">Build & Distribute</div>
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="flow-icon">⚙️</div>
+                    <div class="fs-label">Configure</div>
+                    <div class="fs-sub">Add Zoom creds to .env</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">🔨</div>
+                    <div class="fs-label">Build</div>
+                    <div class="fs-sub">./build-app.sh</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">📦</div>
+                    <div class="fs-label">Package</div>
+                    <div class="fs-sub">dist/ .app + .dmg</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">🚀</div>
+                    <div class="fs-label">Launch</div>
+                    <div class="fs-sub">Open Zoom MCP.app</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon">✅</div>
+                    <div class="fs-label">Done</div>
+                    <div class="fs-sub">Claude can see Zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-  <div class="flow-wrapper">
-    <div class="section-label" style="text-align:center;margin-bottom:28px;">Build & Distribute</div>
-    <div class="flow-steps">
-      <div class="flow-step">
-        <div class="flow-icon">⚙️</div>
-        <div class="fs-label">Configure</div>
-        <div class="fs-sub">Add Zoom creds to .env</div>
-      </div>
-      <div class="flow-step">
-        <div class="flow-icon">🔨</div>
-        <div class="fs-label">Build</div>
-        <div class="fs-sub">./build-app.sh</div>
-      </div>
-      <div class="flow-step">
-        <div class="flow-icon">📦</div>
-        <div class="fs-label">Package</div>
-        <div class="fs-sub">dist/ .app + .dmg</div>
-      </div>
-      <div class="flow-step">
-        <div class="flow-icon">🚀</div>
-        <div class="fs-label">Launch</div>
-        <div class="fs-sub">Open Zoom MCP.app</div>
-      </div>
-      <div class="flow-step">
-        <div class="flow-icon">✅</div>
-        <div class="fs-label">Done</div>
-        <div class="fs-sub">Claude can see Zoom</div>
-      </div>
-    </div>
-  </div>
-</section>
+    <!-- ─── TOOLS ─── -->
+    <div class="divider"></div>
+    <section id="tools">
+        <div class="section-label">MCP Tools</div>
+        <h2>9 Zoom API Tools</h2>
+        <p class="section-desc">Everything Claude needs to manage your Zoom account through natural language.</p>
 
-<!-- ─── TOOLS ─── -->
-<div class="divider"></div>
-<section id="tools">
-  <div class="section-label">MCP Tools</div>
-  <h2>9 Zoom API Tools</h2>
-  <p class="section-desc">Everything Claude needs to manage your Zoom account through natural language.</p>
+        <div class="tools-grid">
+            <div class="tool-chip">
+                <div class="ti">📋</div>
+                <div>
+                    <div class="tn">list_meetings</div>
+                    <div class="td">Scheduled, live, upcoming, previous</div>
+                </div>
+            </div>
+            <div class="tool-chip">
+                <div class="ti">🔍</div>
+                <div>
+                    <div class="tn">get_meeting</div>
+                    <div class="td">Full details for a meeting ID</div>
+                </div>
+            </div>
+            <div class="tool-chip">
+                <div class="ti">➕</div>
+                <div>
+                    <div class="tn">create_meeting</div>
+                    <div class="td">Topic, time, duration, settings</div>
+                </div>
+            </div>
+            <div class="tool-chip">
+                <div class="ti">✏️</div>
+                <div>
+                    <div class="tn">update_meeting</div>
+                    <div class="td">Edit time, agenda, settings</div>
+                </div>
+            </div>
+            <div class="tool-chip">
+                <div class="ti">🗑️</div>
+                <div>
+                    <div class="tn">delete_meeting</div>
+                    <div class="td">Cancel a meeting by ID</div>
+                </div>
+            </div>
+            <div class="tool-chip">
+                <div class="ti">👥</div>
+                <div>
+                    <div class="tn">list_users</div>
+                    <div class="td">Active, inactive, pending users</div>
+                </div>
+            </div>
+            <div class="tool-chip">
+                <div class="ti">👤</div>
+                <div>
+                    <div class="tn">get_user</div>
+                    <div class="td">User by ID or email</div>
+                </div>
+            </div>
+            <div class="tool-chip">
+                <div class="ti">🙋</div>
+                <div>
+                    <div class="tn">get_meeting_participants</div>
+                    <div class="td">Participant list for past meetings</div>
+                </div>
+            </div>
+            <div class="tool-chip">
+                <div class="ti">🎬</div>
+                <div>
+                    <div class="tn">get_meeting_recordings</div>
+                    <div class="td">Cloud recording links</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-  <div class="tools-grid">
-    <div class="tool-chip">
-      <div class="ti">📋</div>
-      <div>
-        <div class="tn">list_meetings</div>
-        <div class="td">Scheduled, live, upcoming, previous</div>
-      </div>
-    </div>
-    <div class="tool-chip">
-      <div class="ti">🔍</div>
-      <div>
-        <div class="tn">get_meeting</div>
-        <div class="td">Full details for a meeting ID</div>
-      </div>
-    </div>
-    <div class="tool-chip">
-      <div class="ti">➕</div>
-      <div>
-        <div class="tn">create_meeting</div>
-        <div class="td">Topic, time, duration, settings</div>
-      </div>
-    </div>
-    <div class="tool-chip">
-      <div class="ti">✏️</div>
-      <div>
-        <div class="tn">update_meeting</div>
-        <div class="td">Edit time, agenda, settings</div>
-      </div>
-    </div>
-    <div class="tool-chip">
-      <div class="ti">🗑️</div>
-      <div>
-        <div class="tn">delete_meeting</div>
-        <div class="td">Cancel a meeting by ID</div>
-      </div>
-    </div>
-    <div class="tool-chip">
-      <div class="ti">👥</div>
-      <div>
-        <div class="tn">list_users</div>
-        <div class="td">Active, inactive, pending users</div>
-      </div>
-    </div>
-    <div class="tool-chip">
-      <div class="ti">👤</div>
-      <div>
-        <div class="tn">get_user</div>
-        <div class="td">User by ID or email</div>
-      </div>
-    </div>
-    <div class="tool-chip">
-      <div class="ti">🙋</div>
-      <div>
-        <div class="tn">get_meeting_participants</div>
-        <div class="td">Participant list for past meetings</div>
-      </div>
-    </div>
-    <div class="tool-chip">
-      <div class="ti">🎬</div>
-      <div>
-        <div class="tn">get_meeting_recordings</div>
-        <div class="td">Cloud recording links</div>
-      </div>
-    </div>
-  </div>
-</section>
+    <!-- ─── SETUP ─── -->
+    <div class="divider"></div>
+    <section id="setup">
+        <div class="section-label">Getting Started</div>
+        <h2>Setup & Configuration</h2>
+        <p class="section-desc">Three simple steps to integrate Zoom with Claude.</p>
 
-<!-- ─── COMMITS ─── -->
-<div class="divider"></div>
-<section id="commits">
-  <div class="section-label">Changelog</div>
-  <h2>Recent Commits</h2>
-  <p class="section-desc">Latest activity from the <code style="color:#93c5fd;font-size:13px">feature/macos-app</code> branch.</p>
+        <!-- Environment Variables -->
+        <h3 style="font-size: 16px; color: #fff; margin: 32px 0 20px; font-weight: 600;">Environment Variables</h3>
+        <table class="env-table">
+            <thead>
+                <tr>
+                    <th>Variable</th>
+                    <th>Purpose</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="key">ZOOM_CLIENT_ID</td>
+                    <td>Zoom OAuth client identifier</td>
+                    <td class="env-req">Required</td>
+                </tr>
+                <tr>
+                    <td class="key">ZOOM_CLIENT_SECRET</td>
+                    <td>Zoom OAuth client secret</td>
+                    <td class="env-req">Required</td>
+                </tr>
+                <tr>
+                    <td class="key">ZOOM_ACCOUNT_ID</td>
+                    <td>Your Zoom account ID for S2S auth</td>
+                    <td class="env-req">Required</td>
+                </tr>
+                <tr>
+                    <td class="key">OPENAI_API_KEY</td>
+                    <td>Optional OpenAI API key (openai branch)</td>
+                    <td class="env-opt">Optional</td>
+                </tr>
+                <tr>
+                    <td class="key">MCP_TRANSPORT</td>
+                    <td>Transport type: stdio or http</td>
+                    <td class="env-opt">Optional</td>
+                </tr>
+                <tr>
+                    <td class="key">MCP_HTTP_PORT</td>
+                    <td>HTTP port when using http transport</td>
+                    <td class="env-opt">Optional</td>
+                </tr>
+            </tbody>
+        </table>
 
-  <div class="commits-list">
-    <div class="commit">
-      <div class="commit-hash">1278f6f</div>
-      <div class="commit-msg">Build macOS app for arm64 and x64 architectures — DMG and ZIP distributions ready</div>
-      <div class="commit-tag tag-feat">feat</div>
-    </div>
-    <div class="commit">
-      <div class="commit-hash">b8e3005</div>
-      <div class="commit-msg">Fix Restart Claude button white hover by excluding from secondary hover rule</div>
-      <div class="commit-tag tag-fix">fix</div>
-    </div>
-    <div class="commit">
-      <div class="commit-hash">1e0bb70</div>
-      <div class="commit-msg">Add Restart Claude button with purple gradient styling</div>
-      <div class="commit-tag tag-ui">ui</div>
-    </div>
-    <div class="commit">
-      <div class="commit-hash">9c34d69</div>
-      <div class="commit-msg">Add Zoom logo as Electron app icon</div>
-      <div class="commit-tag tag-ui">ui</div>
-    </div>
-    <div class="commit">
-      <div class="commit-hash">a03a26b</div>
-      <div class="commit-msg">Fix server stop not working on first click</div>
-      <div class="commit-tag tag-fix">fix</div>
-    </div>
-    <div class="commit">
-      <div class="commit-hash">8465cbd</div>
-      <div class="commit-msg">Add macOS window buttons to token panel and match logs section styling</div>
-      <div class="commit-tag tag-ui">ui</div>
-    </div>
-    <div class="commit">
-      <div class="commit-hash">dd4a7f6</div>
-      <div class="commit-msg">Add token management buttons and live token display panel to Electron app</div>
-      <div class="commit-tag tag-feat">feat</div>
-    </div>
-    <div class="commit">
-      <div class="commit-hash">891aeea</div>
-      <div class="commit-msg">Fix: restart Claude in background to prevent focus stealing</div>
-      <div class="commit-tag tag-fix">fix</div>
-    </div>
-    <div class="commit">
-      <div class="commit-hash">8bb298a</div>
-      <div class="commit-msg">Fix: unset ELECTRON_RUN_AS_NODE in npm scripts</div>
-      <div class="commit-tag tag-fix">fix</div>
-    </div>
-    <div class="commit">
-      <div class="commit-hash">75658d3</div>
-      <div class="commit-msg">Fix: convert electron files to CommonJS to fix segfault</div>
-      <div class="commit-tag tag-fix">fix</div>
-    </div>
-  </div>
-</section>
+        <!-- Claude Desktop Config -->
+        <h3 style="font-size: 16px; color: #fff; margin: 32px 0 20px; font-weight: 600;">Claude Desktop Config</h3>
+        <div class="code-block">
+            <div class="code-header">
+                <div class="code-dots">
+                    <div class="code-dot r"></div>
+                    <div class="code-dot y"></div>
+                    <div class="code-dot g"></div>
+                </div>
+                <div class="code-title">~/.claude/claude_desktop_config.json</div>
+            </div>
+            <div class="code-content">{
+                "mcpServers": {
+                "zoom": {
+                "command": "node",
+                "args": ["/path/to/zoommcp/index.js"],
+                "env": {
+                "ZOOM_ACCESS_TOKEN": "&lt;your-access-token&gt;"
+                }
+                }
+                }
+                }</div>
+        </div>
+    </section>
 
-<!-- ─── FOOTER ─── -->
-<footer>
-  <div style="margin-bottom:8px">
-    <a href="https://github.com/bstef/zoommcp">GitHub</a>
-    &nbsp;·&nbsp;
-    <a href="https://zoom.us">Zoom</a>
-    &nbsp;·&nbsp;
-    <a href="https://claude.ai">Claude</a>
-    &nbsp;·&nbsp;
-    <a href="https://modelcontextprotocol.io">MCP Docs</a>
-  </div>
-  Zoom MCP — Model Context Protocol server for Zoom API integration
-</footer>
+    <!-- ─── CHANGELOG ─── -->
+    <div class="divider"></div>
+    <section id="commits">
+        <div class="section-label">Changelog</div>
+        <h2>Recent Commits</h2>
+        <p class="section-desc">Latest activity from the <code
+                style="color:#93c5fd;font-size:13px">feature/macos-app</code> branch.</p>
+
+        <div class="commits-list">
+            <div class="commit">
+                <div class="commit-hash">1278f6f</div>
+                <div class="commit-msg">Build macOS app for arm64 and x64 architectures — DMG and ZIP distributions
+                    ready</div>
+                <div class="commit-tag tag-feat">feat</div>
+            </div>
+            <div class="commit">
+                <div class="commit-hash">b8e3005</div>
+                <div class="commit-msg">Fix Restart Claude button white hover by excluding from secondary hover rule
+                </div>
+                <div class="commit-tag tag-fix">fix</div>
+            </div>
+            <div class="commit">
+                <div class="commit-hash">1e0bb70</div>
+                <div class="commit-msg">Add Restart Claude button with purple gradient styling</div>
+                <div class="commit-tag tag-ui">ui</div>
+            </div>
+            <div class="commit">
+                <div class="commit-hash">9c34d69</div>
+                <div class="commit-msg">Add Zoom logo as Electron app icon</div>
+                <div class="commit-tag tag-ui">ui</div>
+            </div>
+            <div class="commit">
+                <div class="commit-hash">a03a26b</div>
+                <div class="commit-msg">Fix server stop not working on first click</div>
+                <div class="commit-tag tag-fix">fix</div>
+            </div>
+            <div class="commit">
+                <div class="commit-hash">8465cbd</div>
+                <div class="commit-msg">Add macOS window buttons to token panel and match logs section styling</div>
+                <div class="commit-tag tag-ui">ui</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div style="margin-bottom: 8px;">
+            <a href="https://github.com/bstef/zoommcp">GitHub</a>
+            &nbsp;·&nbsp;
+            <a href="https://zoom.us">Zoom</a>
+            &nbsp;·&nbsp;
+            <a href="https://claude.ai">Claude</a>
+            &nbsp;·&nbsp;
+            <a href="https://modelcontextprotocol.io">MCP Docs</a>
+        </div>
+        Zoom MCP — Model Context Protocol server for Zoom API integration
+    </footer>
 
 </body>
+
 </html>
