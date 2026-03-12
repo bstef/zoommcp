@@ -214,58 +214,53 @@
             border-color: rgba(255, 255, 255, .2);
         }
 
-        /* ─── DROPDOWN ─── */
-        .btn-dropdown {
-            position: relative;
-            display: inline-block;
+        /* ─── BRANCH BUTTONS ─── */
+        .hero-branch-btns {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 24px;
         }
 
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--bg2);
+        .branch-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 8px 0;
-            margin-top: 8px;
-            min-width: 200px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateX(-50%) translateY(-10px);
-            transition: all 0.2s ease;
-            z-index: 50;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn-dropdown:hover .dropdown-menu {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .dropdown-menu a {
-            display: block;
-            padding: 10px 16px;
-            color: var(--muted);
             text-decoration: none;
-            font-size: 13px;
-            transition: all 0.15s;
-            border-left: 2px solid transparent;
+            background: var(--bg2);
+            transition: all 0.2s ease;
         }
 
-        .dropdown-menu a:hover {
+        .branch-btn:hover {
+            border-color: rgba(79, 110, 247, .6);
             background: var(--bg3);
-            color: var(--text);
-            border-left-color: var(--blue);
-            padding-left: 18px;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(79, 110, 247, .2);
         }
 
-        .dropdown-menu a:first-child {
-            border-top: 1px solid var(--border);
-            padding-top: 12px;
-            margin-top: 4px;
+        .branch-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .branch-content {
+            text-align: left;
+        }
+
+        .branch-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .branch-desc {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
         }
 
         /* ─── SECTION ─── */
@@ -820,20 +815,33 @@
             <a href="#app" class="btn btn-ghost">macOS App</a>
             <a href="#app-features" class="btn btn-ghost">App Features</a>
             <a href="#tools" class="btn btn-ghost">Tools</a>
-            <div class="btn-dropdown">
-                <button class="btn btn-ghost"
-                    style="cursor: pointer; border: none; padding: 11px 24px; background: transparent; color: var(--text);">GitHub
-                    ▼</button>
-                <div class="dropdown-menu">
-                    <a href="https://github.com/bstef/zoommcp/tree/main">📌 Main Branch</a>
-                    <a href="https://github.com/bstef/zoommcp/tree/openai">🤖 OpenAI Branch</a>
-                    <a href="https://github.com/bstef/zoommcp/tree/feature/macos-app">🍎 macOS App Branch</a>
-                    <a href="https://github.com/bstef/zoommcp"
-                        style="border-top: 1px solid var(--border); margin-top: 4px; padding-top: 12px;">🔗 GitHub
-                        Repository</a>
-                </div>
-            </div>
         </div>
+
+        <!-- Branch Buttons -->
+        <div class="hero-branch-btns">
+            <a href="https://github.com/bstef/zoommcp/tree/main" class="branch-btn">
+                <div class="branch-icon">📌</div>
+                <div class="branch-content">
+                    <div class="branch-name">Main</div>
+                    <div class="branch-desc">Core MCP server for Claude & ChatGPT</div>
+                </div>
+            </a>
+            <a href="https://github.com/bstef/zoommcp/tree/openai" class="branch-btn">
+                <div class="branch-icon">🤖</div>
+                <div class="branch-content">
+                    <div class="branch-name">OpenAI</div>
+                    <div class="branch-desc">OpenAI API integration for enhanced AI</div>
+                </div>
+            </a>
+            <a href="https://github.com/bstef/zoommcp/tree/feature/macos-app" class="branch-btn">
+                <div class="branch-icon">🍎</div>
+                <div class="branch-content">
+                    <div class="branch-name">macOS App</div>
+                    <div class="branch-desc">Native Electron app with GUI controls</div>
+                </div>
+            </a>
+        </div>
+    </div>
     </div>
 
     <!-- ─── STATS ─── -->
@@ -1196,16 +1204,16 @@
                 <div class="code-title">~/.claude/claude_desktop_config.json</div>
             </div>
             <div class="code-content">{
-  "mcpServers": {
-    "zoom": {
-      "command": "node",
-      "args": ["/path/to/zoommcp/index.js"],
-      "env": {
-        "ZOOM_ACCESS_TOKEN": "&lt;your-access-token&gt;"
-      }
-    }
-  }
-}</div>
+                "mcpServers": {
+                "zoom": {
+                "command": "node",
+                "args": ["/path/to/zoommcp/index.js"],
+                "env": {
+                "ZOOM_ACCESS_TOKEN": "&lt;your-access-token&gt;"
+                }
+                }
+                }
+                }</div>
         </div>
     </section>
 
