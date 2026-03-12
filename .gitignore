@@ -5,3 +5,5 @@ node_modules/
 /assets
 notes.txt
 /logs/*.log
+dist/
+*.code-workspace
