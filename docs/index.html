@@ -149,7 +149,7 @@
   .stat-pill .icon { font-size: 14px; }
   .lang-dot { width: 10px; height: 10px; border-radius: 50%; background: #3b82f6; }
 
-  .badge-python { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); color: #60a5fa; }
+  .badge-node { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); color: #60a5fa; }
   .badge-mcp { background: rgba(124, 58, 237, 0.1); border-color: rgba(124, 58, 237, 0.3); color: #a78bfa; }
   .badge-zoom { background: rgba(26, 95, 212, 0.1); border-color: rgba(45, 122, 255, 0.3); color: #60a5fa; }
 
@@ -362,10 +362,53 @@
   .tree-icon { width: 16px; text-align: center; font-size: 14px; }
   .tree-name { flex: 1; color: var(--text); }
   .tree-name.dir { color: #93c5fd; }
-  .tree-name.py { color: #86efac; }
+  .tree-name.js { color: #86efac; }
   .tree-name.config { color: #fcd34d; }
   .tree-name.md { color: #c4b5fd; }
   .tree-desc { font-size: 11px; color: var(--muted); }
+
+  /* Branch cards */
+  .branch-section {
+    margin-bottom: 36px;
+    animation: slideUp 0.6s ease 0.35s both;
+  }
+
+  .branch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+
+  .branch-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .branch-card h3 {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .branch-card p {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .branch-tag {
+    display: inline-block;
+    margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 8px;
+  }
 
   /* Setup block */
   .setup-section {
@@ -481,7 +524,6 @@
 <body>
 <div class="container">
 
-  <!-- Header -->
   <div class="repo-header">
     <div class="repo-icon">🔌</div>
     <div class="repo-title-block">
@@ -490,42 +532,40 @@
         <span class="sep">/</span>
         <span class="name">zoommcp</span>
       </h1>
-      <div class="repo-desc">Model Context Protocol server for the Zoom REST API</div>
+      <div class="repo-desc">Node.js MCP server for Zoom with Claude Desktop + ChatGPT Apps support</div>
     </div>
   </div>
 
-  <!-- Stats row -->
   <div class="stats-row">
-    <div class="stat-pill badge-python"><div class="lang-dot"></div> Python</div>
+    <div class="stat-pill badge-node"><div class="lang-dot"></div> Node.js 18+</div>
     <div class="stat-pill badge-mcp">⚡ MCP Server</div>
     <div class="stat-pill badge-zoom">🎥 Zoom API</div>
+    <div class="stat-pill">🔄 stdio + HTTP</div>
     <div class="stat-pill"><span class="live-dot"></span>&nbsp;Active</div>
-    <div class="stat-pill">⭐ Public</div>
     <div class="stat-pill">📄 MIT</div>
   </div>
 
-  <!-- Architecture -->
   <div class="arch-section">
     <div class="section-title">Architecture</div>
     <div class="arch-diagram">
       <div class="arch-flow">
         <div class="arch-node">
-          <div class="arch-box client">AI Client<br><span style="font-size:10px;opacity:0.7">Claude / Cursor</span></div>
+          <div class="arch-box client">AI Client<br><span style="font-size:10px;opacity:0.7">Claude / ChatGPT</span></div>
           <div class="arch-label">MCP Host</div>
         </div>
         <div class="arch-arrow">
           <div class="arrow-line">⟷</div>
           <div class="arrow-text">MCP Protocol</div>
-          <div class="arrow-text">stdio / SSE</div>
+          <div class="arrow-text">stdio / StreamableHTTP</div>
         </div>
         <div class="arch-node">
-          <div class="arch-box mcp">zoommcp<br><span style="font-size:10px;opacity:0.7">Python Server</span></div>
+          <div class="arch-box mcp">zoommcp<br><span style="font-size:10px;opacity:0.7">index.js (Node)</span></div>
           <div class="arch-label">This Repo</div>
         </div>
         <div class="arch-arrow">
           <div class="arrow-line">⟷</div>
           <div class="arrow-text">REST API</div>
-          <div class="arrow-text">OAuth 2.0</div>
+          <div class="arrow-text">OAuth 2.0 S2S</div>
         </div>
         <div class="arch-node">
           <div class="arch-box zoom">Zoom API<br><span style="font-size:10px;opacity:0.7">api.zoom.us/v2</span></div>
@@ -535,78 +575,97 @@
     </div>
   </div>
 
-  <!-- Tools -->
+  <div class="branch-section">
+    <div class="section-title">Branch Types And Purpose</div>
+    <div class="branch-grid">
+      <div class="branch-card">
+        <h3>main</h3>
+        <p>The easiest way to run this project. Focused on stable Claude Desktop usage with token refresh automation and simple startup flow.</p>
+        <span class="branch-tag">easy run path</span>
+      </div>
+      <div class="branch-card">
+        <h3>feature/macos-app</h3>
+        <p>Focused on building and packaging a macOS app (Electron) so the project can be used as a desktop app workflow.</p>
+        <span class="branch-tag">build app path</span>
+      </div>
+      <div class="branch-card">
+        <h3>openai</h3>
+        <p>Focused on ChatGPT integration using Streamable HTTP transport, plus ngrok/public HTTPS flow for ChatGPT Apps connectivity.</p>
+        <span class="branch-tag">chatgpt integration</span>
+      </div>
+    </div>
+  </div>
+
   <div class="tools-section">
     <div class="section-title">Exposed MCP Tools</div>
     <div class="tools-grid">
       <div class="tool-card">
         <div class="tool-icon">📅</div>
         <div class="tool-info">
-          <h3>create_meeting</h3>
-          <p>Schedule a new Zoom meeting with topic, time, duration, and settings</p>
+          <h3>list_meetings / get_meeting</h3>
+          <p>Read Zoom meetings and inspect detailed metadata including join links and schedule.</p>
         </div>
       </div>
       <div class="tool-card">
-        <div class="tool-icon">✏️</div>
+        <div class="tool-icon">🛠️</div>
         <div class="tool-info">
-          <h3>update_meeting</h3>
-          <p>Modify an existing meeting's details, schedule, or settings by ID</p>
-        </div>
-      </div>
-      <div class="tool-card">
-        <div class="tool-icon">🗑️</div>
-        <div class="tool-info">
-          <h3>delete_meeting</h3>
-          <p>Remove a meeting or cancel a recurring instance by meeting ID</p>
-        </div>
-      </div>
-      <div class="tool-card">
-        <div class="tool-icon">📋</div>
-        <div class="tool-info">
-          <h3>list_meetings</h3>
-          <p>Retrieve scheduled, live, or historical meetings for the user</p>
-        </div>
-      </div>
-      <div class="tool-card">
-        <div class="tool-icon">🔍</div>
-        <div class="tool-info">
-          <h3>get_meeting</h3>
-          <p>Fetch full details of a single meeting including join URL and settings</p>
+          <h3>create/update/delete_meeting</h3>
+          <p>Create, modify, or remove meetings directly through MCP tools.</p>
         </div>
       </div>
       <div class="tool-card">
         <div class="tool-icon">👥</div>
         <div class="tool-info">
-          <h3>list_participants</h3>
-          <p>View attendees and registration data for past or upcoming meetings</p>
+          <h3>list_users / get_user</h3>
+          <p>Retrieve account users and profile details for scheduling and ownership workflows.</p>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">🎬</div>
+        <div class="tool-info">
+          <h3>get_meeting_recordings</h3>
+          <p>Pull recording metadata for completed meetings.</p>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">📊</div>
+        <div class="tool-info">
+          <h3>get_meeting_participants</h3>
+          <p>Inspect participant lists and attendance details.</p>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">🔑</div>
+        <div class="tool-info">
+          <h3>create_openai_api_key</h3>
+          <p>Helper workflow for OpenAI API key setup in the ChatGPT-focused branch path.</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Two column info + files -->
   <div class="two-col">
     <div class="info-card">
       <h4>Project Info</h4>
       <div class="info-item">
-        <div class="tree-icon">🐍</div>
+        <div class="tree-icon">🟩</div>
         <span class="info-key">runtime</span>
-        <span class="info-val blue">Python 3.10+</span>
+        <span class="info-val blue">Node.js 18+</span>
       </div>
       <div class="info-item">
         <div class="tree-icon">📦</div>
         <span class="info-key">transport</span>
-        <span class="info-val">stdio</span>
+        <span class="info-val">stdio / http / both</span>
       </div>
       <div class="info-item">
         <div class="tree-icon">🔐</div>
         <span class="info-key">auth</span>
-        <span class="info-val">OAuth 2.0 S2S</span>
+        <span class="info-val">Zoom OAuth 2.0 S2S</span>
       </div>
       <div class="info-item">
         <div class="tree-icon">⚙️</div>
-        <span class="info-key">config</span>
-        <span class="info-val">ENV vars</span>
+        <span class="info-key">token flow</span>
+        <span class="info-val">auto-refresh + JWT exp check</span>
       </div>
       <div class="info-item">
         <div class="tree-icon">✅</div>
@@ -618,10 +677,6 @@
     <div class="info-card">
       <h4>Environment Variables</h4>
       <div class="info-item">
-        <span class="info-key">ZOOM_ACCOUNT_ID</span>
-        <span class="info-val blue">required</span>
-      </div>
-      <div class="info-item">
         <span class="info-key">ZOOM_CLIENT_ID</span>
         <span class="info-val blue">required</span>
       </div>
@@ -630,13 +685,20 @@
         <span class="info-val blue">required</span>
       </div>
       <div class="info-item">
-        <span class="info-key">ZOOM_USER_ID</span>
+        <span class="info-key">ZOOM_ACCOUNT_ID</span>
+        <span class="info-val blue">required</span>
+      </div>
+      <div class="info-item">
+        <span class="info-key">OPENAI_API_KEY</span>
+        <span class="info-val" style="color:var(--warn)">optional</span>
+      </div>
+      <div class="info-item">
+        <span class="info-key">MCP_TRANSPORT / MCP_HTTP_PORT</span>
         <span class="info-val" style="color:var(--warn)">optional</span>
       </div>
     </div>
   </div>
 
-  <!-- File tree -->
   <div class="files-section">
     <div class="section-title">Repository Structure</div>
     <div class="file-tree">
@@ -644,39 +706,38 @@
         <span>📁</span> bstef / zoommcp
       </div>
       <div class="tree-row">
-        <div class="tree-icon">🐍</div>
-        <div class="tree-name py">server.py</div>
-        <div class="tree-desc">MCP server entrypoint, tool registrations</div>
+        <div class="tree-icon">🟩</div>
+        <div class="tree-name js">index.js</div>
+        <div class="tree-desc">MCP server entrypoint and tool registration</div>
       </div>
       <div class="tree-row">
-        <div class="tree-icon">🔌</div>
-        <div class="tree-name py">zoom_client.py</div>
-        <div class="tree-desc">Zoom REST API wrapper, OAuth token management</div>
+        <div class="tree-icon">🚀</div>
+        <div class="tree-name config">run.sh</div>
+        <div class="tree-desc">Claude Desktop startup flow with token checks</div>
       </div>
       <div class="tree-row">
-        <div class="tree-icon">📄</div>
-        <div class="tree-name config">pyproject.toml</div>
-        <div class="tree-desc">Project metadata, dependencies (mcp, httpx)</div>
+        <div class="tree-icon">🌐</div>
+        <div class="tree-name config">run_chatgpt.sh</div>
+        <div class="tree-desc">HTTP startup flow for ChatGPT Apps integration</div>
       </div>
       <div class="tree-row">
-        <div class="tree-icon">📄</div>
-        <div class="tree-name config">uv.lock</div>
-        <div class="tree-desc">Locked dependency manifest</div>
+        <div class="tree-icon">🔐</div>
+        <div class="tree-name config">get_zoom_token.sh</div>
+        <div class="tree-desc">Fetch and persist Zoom access token to .env</div>
       </div>
       <div class="tree-row">
         <div class="tree-icon">📝</div>
-        <div class="tree-name md">README.md</div>
-        <div class="tree-desc">Setup guide, Claude Desktop config snippet</div>
+        <div class="tree-name md">docs/readmes/*.md</div>
+        <div class="tree-desc">Branch-specific README templates (main/openai/macos)</div>
       </div>
       <div class="tree-row">
-        <div class="tree-icon">⚖️</div>
-        <div class="tree-name config">LICENSE</div>
-        <div class="tree-desc">MIT License</div>
+        <div class="tree-icon">🧰</div>
+        <div class="tree-name config">scripts/sync-readme.sh</div>
+        <div class="tree-desc">Sync/check README.md from branch template</div>
       </div>
     </div>
   </div>
 
-  <!-- Setup code block -->
   <div class="setup-section">
     <div class="section-title">Claude Desktop Config</div>
     <div class="code-block">
@@ -689,27 +750,25 @@
         <div class="code-title">claude_desktop_config.json</div>
       </div>
       <div class="code-content">
-        <div class="line"><span class="ln">1</span><span class="c-comment">// ~/.config/claude/claude_desktop_config.json</span></div>
+        <div class="line"><span class="ln">1</span><span class="c-comment">// ~/Library/Application Support/Claude/claude_desktop_config.json</span></div>
         <div class="line"><span class="ln">2</span><span class="c-key">{</span></div>
         <div class="line"><span class="ln">3</span><span>&nbsp;&nbsp;</span><span class="c-str">"mcpServers"</span><span class="c-op">:</span> <span class="c-key">{</span></div>
         <div class="line"><span class="ln">4</span><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"zoom"</span><span class="c-op">:</span> <span class="c-key">{</span></div>
-        <div class="line"><span class="ln">5</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"command"</span><span class="c-op">:</span> <span class="c-val">"uv"</span><span class="c-op">,</span></div>
-        <div class="line"><span class="ln">6</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"args"</span><span class="c-op">:</span> <span class="c-key">[</span><span class="c-val">"run"</span><span class="c-op">,</span> <span class="c-val">"--directory"</span><span class="c-op">,</span> <span class="c-val">"/path/to/zoommcp"</span><span class="c-op">,</span> <span class="c-val">"server.py"</span><span class="c-key">]</span><span class="c-op">,</span></div>
+        <div class="line"><span class="ln">5</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"command"</span><span class="c-op">:</span> <span class="c-val">"node"</span><span class="c-op">,</span></div>
+        <div class="line"><span class="ln">6</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"args"</span><span class="c-op">:</span> <span class="c-key">[</span><span class="c-val">"/absolute/path/to/zoommcp/index.js"</span><span class="c-key">]</span><span class="c-op">,</span></div>
         <div class="line"><span class="ln">7</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"env"</span><span class="c-op">:</span> <span class="c-key">{</span></div>
-        <div class="line"><span class="ln">8</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"ZOOM_ACCOUNT_ID"</span><span class="c-op">:</span> <span class="c-val">"&lt;your-account-id&gt;"</span><span class="c-op">,</span></div>
-        <div class="line"><span class="ln">9</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"ZOOM_CLIENT_ID"</span><span class="c-op">:</span> <span class="c-val">"&lt;your-client-id&gt;"</span><span class="c-op">,</span></div>
-        <div class="line"><span class="ln">10</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"ZOOM_CLIENT_SECRET"</span><span class="c-op">:</span> <span class="c-val">"&lt;your-client-secret&gt;"</span></div>
-        <div class="line"><span class="ln">11</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-key">}</span></div>
-        <div class="line"><span class="ln">12</span><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-key">}</span></div>
-        <div class="line"><span class="ln">13</span><span>&nbsp;&nbsp;</span><span class="c-key">}</span></div>
-        <div class="line"><span class="ln">14</span><span class="c-key">}</span></div>
+        <div class="line"><span class="ln">8</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-str">"ZOOM_ACCESS_TOKEN"</span><span class="c-op">:</span> <span class="c-val">"&lt;your-access-token&gt;"</span></div>
+        <div class="line"><span class="ln">9</span><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-key">}</span></div>
+        <div class="line"><span class="ln">10</span><span>&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="c-key">}</span></div>
+        <div class="line"><span class="ln">11</span><span>&nbsp;&nbsp;</span><span class="c-key">}</span></div>
+        <div class="line"><span class="ln">12</span><span class="c-key">}</span></div>
       </div>
     </div>
   </div>
 
   <div class="footer">
     <span>github.com/bstef/zoommcp</span>
-    <span>Python · MCP · Zoom API v2</span>
+    <span>Node.js · MCP · Zoom API v2</span>
   </div>
 
 </div>
