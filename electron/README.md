@@ -47,7 +47,8 @@ npm run app:build  # All platforms
 - **Real-time Logs** - View server logs in the app window
 - **Controls** - Start/stop the MCP server from the UI
 - **Menu Bar Integration** - Access from macOS menu
-- **Auto-start** - Can be configured to launch at login
+- **MCP Auto-start on Launch** - Opening the app starts MCP automatically
+- **Relaunch-safe Window Handling** - Reopening the app restores/focuses the window
 
 ## Distribution
 
@@ -57,15 +58,24 @@ The built app will be in the `dist/` directory:
 ## Configuration
 
 The app reads configuration from:
-- `.env` file for Zoom credentials
+- `.env` file for Zoom credentials (or `ZOOM_ENV_FILE` for an explicit path)
 - Claude Desktop MCP configuration
+
+Optional app env vars:
+- `ZOOM_APP_AUTOSTART=0` disables MCP auto-start on launch
+- `ZOOM_ENV_FILE=/absolute/path/to/.env` sets the token source file explicitly
 
 ## Troubleshooting
 
 ### App won't start
 - Ensure `.env` file has valid Zoom credentials
-- Check `dist/Zoom MCP.app/Contents/Resources/app.asar` exists
+- Check `dist/mac-arm64/Zoom MCP.app/Contents/Resources/app.asar` exists
 - Try running with `npm run app:dev` to see detailed errors
+
+### App icon appears but no window
+- Fully quit any stale app process and relaunch:
+	- `pkill -f "Zoom MCP.app/Contents/MacOS/Zoom MCP"`
+	- `open "dist/mac-arm64/Zoom MCP.app"`
 
 ### Server won't connect
 - Verify Claude Desktop is installed and running
@@ -82,8 +92,8 @@ The app reads configuration from:
 ### Project Structure
 ```
 electron/
-├── main.js          # Electron main process
-├── preload.js       # Security preload script
+├── main.cjs         # Electron main process
+├── preload.cjs      # Security preload script
 ├── renderer.js      # Frontend logic
 ├── index.html       # UI template
 └── styles.css       # Styling

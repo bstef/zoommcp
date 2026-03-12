@@ -190,6 +190,8 @@ ZOOM_AUTO_REFRESH_THRESHOLD # Seconds before token expires to auto-refresh (defa
 ZOOM_TOKEN_DISPLAY_INTERVAL # How often to display token status updates in seconds (default: 60)
 ZOOM_CHECK_VERBOSE          # Enable verbose logging (set to any non-empty value)
 ZOOM_CHECK_LOGFILE          # Log file path (default: ./logs/zoom_token.log)
+ZOOM_APP_AUTOSTART          # Electron app only: auto-start MCP on launch (default: enabled)
+ZOOM_ENV_FILE               # Optional explicit .env path for app startup token loading
 ```
 
 **Customizing Token Monitoring:**
@@ -209,6 +211,8 @@ ZOOM_TOKEN_DISPLAY_INTERVAL=120 ./run.sh
   - Same startup checks without banner/browser step.
 - **Claude MCP startup**: configure Claude to run `node launch-mcp.js`
   - Avoids macOS shell execution restrictions from Claude log contexts.
+- **Native macOS app startup**: run `npm run app` for dev or open `dist/mac-arm64/Zoom MCP.app` after build
+  - Packaged app auto-starts MCP by default. Set `ZOOM_APP_AUTOSTART=0` to disable.
 
 ## Claude Desktop Configuration
 
