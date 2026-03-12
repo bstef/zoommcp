@@ -31,17 +31,16 @@ npm run app:build:mac || exit 1
 echo -e "${GREEN}✅ App built successfully!${NC}"
 echo ""
 
-echo -e "${BLUE}📂 App location: ./dist/Zoom MCP.app${NC}"
+echo -e "${BLUE}📂 App location: ./dist/mac*/Zoom MCP.app${NC}"
 echo ""
 echo -e "${YELLOW}Next steps:${NC}"
-echo "  1. Open the app: open dist/Zoom\\ MCP.app"
-echo "  2. Or install to Applications folder:"
-echo "     open dist/Zoom\\ MCP.dmg"
+echo "  1. Open the app: open dist/mac*/Zoom\\ MCP.app"
+echo "  2. Drag Zoom MCP.app to Applications if desired"
 echo ""
 
 # Optionally install
 read -p "Would you like to open the app now? (y/n) " -n 1 -r
 echo ""
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    open dist/Zoom\ MCP.app
+    open dist/mac*/Zoom\ MCP.app
 fi

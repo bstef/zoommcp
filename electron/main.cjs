@@ -12,7 +12,43 @@ let serverProcess;
 let tokenActionProcess;
 let serverManuallyStopped = false;
 let isDev = process.argv.includes('--dev');
+const autoStartEnabled = !['0', 'false', 'no'].includes(String(process.env.ZOOM_APP_AUTOSTART || '').toLowerCase());
+let autoStartAttempted = false;
 const projectRoot = path.join(__dirname, '..');
+const appLogDir = path.join(app.getPath('userData'), 'logs');
+const appMcpLogFile = path.join(appLogDir, 'mcp.log');
+const appTokenLogFile = path.join(appLogDir, 'zoom_token.log');
+
+function getCandidateEnvPaths() {
+    const candidates = [];
+    if (process.env.ZOOM_ENV_FILE) candidates.push(process.env.ZOOM_ENV_FILE);
+    candidates.push(path.join(process.cwd(), '.env'));
+    candidates.push(path.join(projectRoot, '.env'));
+    candidates.push(path.join(app.getPath('userData'), '.env'));
+    return [...new Set(candidates)];
+}
+
+function findExistingEnvPath() {
+    for (const envPath of getCandidateEnvPaths()) {
+        if (fs.existsSync(envPath)) return envPath;
+    }
+    return '';
+}
+
+function buildChildEnv() {
+    const tokenInfo = getCurrentTokenInfo();
+    const envFile = findExistingEnvPath();
+
+    return {
+        ...process.env,
+        LOG_FILE: appMcpLogFile,
+        ZOOM_MCP_LOG_DIR: appLogDir,
+        ZOOM_APP_DATA_DIR: app.getPath('userData'),
+        ZOOM_CHECK_LOGFILE: appTokenLogFile,
+        ...(envFile ? { ZOOM_ENV_FILE: envFile } : {}),
+        ...(tokenInfo.token ? { ZOOM_ACCESS_TOKEN: tokenInfo.token } : {}),
+    };
+}
 
 function unquote(value) {
     const trimmed = value.trim();
@@ -23,14 +59,18 @@ function unquote(value) {
 }
 
 function readTokenFromEnv() {
-    const envPath = path.join(projectRoot, '.env');
-    if (!fs.existsSync(envPath)) return '';
-    const content = fs.readFileSync(envPath, 'utf8');
-    const lines = content.split(/\r?\n/);
-    for (const line of lines) {
-        if (!line.startsWith('ZOOM_ACCESS_TOKEN=')) continue;
-        const value = line.slice('ZOOM_ACCESS_TOKEN='.length);
-        return unquote(value);
+    for (const envPath of getCandidateEnvPaths()) {
+        if (!fs.existsSync(envPath)) continue;
+        const content = fs.readFileSync(envPath, 'utf8');
+        const lines = content.split(/\r?\n/);
+        for (const line of lines) {
+            if (!line.startsWith('ZOOM_ACCESS_TOKEN=')) continue;
+            const value = line.slice('ZOOM_ACCESS_TOKEN='.length);
+            const token = unquote(value);
+            if (token) {
+                return token;
+            }
+        }
     }
     return '';
 }
@@ -68,10 +108,14 @@ if (!gotTheLock) {
 } else {
     app.on('second-instance', () => {
         console.log('Second instance attempted');
-        if (mainWindow) {
-            if (mainWindow.isMinimized()) mainWindow.restore();
-            mainWindow.focus();
+        if (!mainWindow || mainWindow.isDestroyed()) {
+            createWindow();
+            return;
         }
+
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        if (!mainWindow.isVisible()) mainWindow.show();
+        mainWindow.focus();
     });
 }
 
@@ -106,6 +150,7 @@ function startServer() {
         serverProcess = spawn('bash', [runScript], {
             cwd: projectRoot,
             stdio: ['pipe', 'pipe', 'pipe'],
+            env: buildChildEnv(),
         });
 
         console.log('Server process spawned with PID:', serverProcess.pid);
@@ -217,6 +262,7 @@ function runTokenAction(scriptName, args, actionLabel) {
     tokenActionProcess = spawn('bash', [scriptPath, ...args], {
         cwd: scriptCwd,
         stdio: ['ignore', 'pipe', 'pipe'],
+        env: buildChildEnv(),
     });
 
     tokenActionProcess.stdout.on('data', (data) => {
@@ -331,6 +377,16 @@ function createWindow() {
         mainWindow.loadURL(fileUrl);
         console.log('URL loaded');
 
+        mainWindow.webContents.once('did-finish-load', () => {
+            if (!autoStartEnabled || autoStartAttempted) return;
+            autoStartAttempted = true;
+
+            if (!serverProcess) {
+                sendWindowMessage('info', '🚀 Auto-starting MCP server...');
+                startServer();
+            }
+        });
+
         if (isDev) {
             mainWindow.webContents.openDevTools();
         }
@@ -420,17 +476,20 @@ app.whenReady()
 
 app.on('window-all-closed', () => {
     console.log('All windows closed');
-    if (process.platform !== 'darwin') {
-        console.log('Quitting app (not macOS)');
-        app.quit();
-    }
+    console.log('Quitting app');
+    app.quit();
 });
 
 app.on('activate', () => {
     console.log('App activated');
-    if (mainWindow === null) {
+    if (mainWindow === null || mainWindow.isDestroyed()) {
         createWindow();
+        return;
     }
+
+    if (!mainWindow.isVisible()) mainWindow.show();
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
 });
 
 app.on('error', (err) => {

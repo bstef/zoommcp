@@ -13,8 +13,8 @@
     "app": "electron electron/main.cjs",
     "app:dev": "electron electron/main.cjs --dev",
     "app:build": "electron-builder --publish never",
-    "app:build:mac": "electron-builder --mac --publish never",
-    "app:install": "npm install && npm run app:build:mac && open dist/Zoom\\ MCP.app"
+    "app:build:mac": "electron-builder --mac dir --publish never",
+    "app:install": "npm install && npm run app:build:mac && open dist/mac*/Zoom\\ MCP.app"
   },
   "keywords": [
     "mcp",
@@ -45,8 +45,7 @@
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "target": [
-        "dmg",
-        "zip"
+        "dir"
       ]
     },
     "files": [

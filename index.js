@@ -9,6 +9,7 @@ import {
 import axios from "axios";
 import { execSync } from "child_process";
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -16,8 +17,13 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Logging utility
-const LOG_FILE = path.join(__dirname, "logs", "mcp.log");
+// Logging utility: use explicit env override first, then writable runtime locations.
+const logDirFromEnv = process.env.ZOOM_MCP_LOG_DIR;
+const appDataFromEnv = process.env.ZOOM_APP_DATA_DIR;
+const fallbackLogDir = appDataFromEnv
+  ? path.join(appDataFromEnv, "logs")
+  : path.join(process.cwd(), "logs");
+const LOG_FILE = process.env.LOG_FILE || path.join(logDirFromEnv || fallbackLogDir, "mcp.log");
 function ensureLogDir() {
   const logDir = path.dirname(LOG_FILE);
   if (!fs.existsSync(logDir)) {

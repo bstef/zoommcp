@@ -20,7 +20,7 @@ Run the build script:
 This will:
 1. Install dependencies
 2. Build the macOS app
-3. Create a `.app` bundle and `.dmg` installer
+3. Create a single `.app` bundle output
 4. Optionally open the built app
 
 ### Manual Build
@@ -52,8 +52,7 @@ npm run app:build  # All platforms
 ## Distribution
 
 The built app will be in the `dist/` directory:
-- `Zoom MCP.app` - The macOS application
-- `Zoom MCP.dmg` - The installer disk image
+- `mac*/Zoom MCP.app` - The macOS application bundle
 
 ## Configuration
 
