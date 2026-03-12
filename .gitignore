@@ -9,4 +9,5 @@ dist/
 build/
 *.dmg
 *.zip
+releases/**
 out/
