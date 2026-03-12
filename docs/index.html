@@ -718,6 +718,7 @@
             <a href="#app">macOS App</a>
             <a href="#tools">Tools</a>
             <a href="#setup">Setup</a>
+            <a href="#app-features">App Features</a>
             <a href="https://github.com/bstef/zoommcp">GitHub</a>
         </div>
     </nav>
@@ -865,24 +866,6 @@
             </div>
         </div>
 
-        <div class="feature-grid" style="margin-top: 32px;">
-            <div class="feature-card">
-                <div class="icon">🎮</div>
-                <h3>One-Click Controls</h3>
-                <p>Start, stop, and restart the MCP server directly from the app interface.</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon">📋</div>
-                <h3>Live Log Stream</h3>
-                <p>Real-time logs with color-coded events for debugging and monitoring.</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon">🔐</div>
-                <h3>Token Panel</h3>
-                <p>View current token, expiry time, and get fresh tokens with one click.</p>
-            </div>
-        </div>
-
         <div class="flow-wrapper" style="margin-top: 48px;">
             <div class="section-label" style="text-align:center;margin-bottom:28px;">Build & Distribute</div>
             <div class="flow-steps">
@@ -911,6 +894,73 @@
                     <div class="fs-label">Done</div>
                     <div class="fs-sub">Claude can see Zoom</div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── APP FEATURES ─── -->
+    <div class="divider"></div>
+    <section id="app-features">
+        <div class="section-label">Desktop Control</div>
+        <h2>App Features</h2>
+        <p class="section-desc">Everything you need to manage the MCP server and Zoom credentials from your desktop.</p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="icon">🎮</div>
+                <h3>One-Click Server Control</h3>
+                <p>Start and stop the MCP server instantly. Server state is reflected in real time across the status
+                    dashboard and badge.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📋</div>
+                <h3>Live Log Viewer</h3>
+                <p>Terminal-style log panel streams server stdout/stderr in real time with color-coded output: green for
+                    status, blue for token info, yellow for warnings.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔐</div>
+                <h3>Token Panel</h3>
+                <p>Displays the current Zoom access token with source attribution (.env or Claude config). Check and
+                    refresh from the app without the terminal.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔁</div>
+                <h3>Restart Claude</h3>
+                <p>Restart Claude Desktop directly from the app with the purple gradient button — useful after token
+                    refreshes that require Claude to reload its config.</p>
+            </div>
+        </div>
+
+        <h3 style="font-size: 16px; color: #fff; margin: 40px 0 20px; font-weight: 600;">ChatGPT Apps Integration</h3>
+        <p style="color: var(--muted); margin-bottom: 24px; max-width: 560px;">Run Zoom MCP as an HTTP server accessible
+            to ChatGPT Apps and other AI clients using OpenAI's protocol.</p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="icon">🌐</div>
+                <h3>HTTP Transport Mode</h3>
+                <p>Set <code style="color: #93c5fd;">MCP_TRANSPORT=http</code> and <code
+                        style="color: #93c5fd;">MCP_HTTP_PORT</code> to run as a standalone HTTP server instead of
+                    stdio.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔗</div>
+                <h3>ngrok Tunnel</h3>
+                <p>Use <code style="color: #93c5fd;">ngrok http 3001</code> to expose your local server to the internet
+                    securely. Perfect for ChatGPT Apps and remote access.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">📡</div>
+                <h3>Remote Access</h3>
+                <p>Share the public ngrok URL with ChatGPT Apps or other MCP clients. Full OAuth support over HTTPS
+                    tunnel.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔒</div>
+                <h3>Secure by Default</h3>
+                <p>ngrok provides encryption and authentication. All Zoom API calls use OAuth 2.0 Server-to-Server with
+                    secure token storage.</p>
             </div>
         </div>
     </section>
