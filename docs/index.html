@@ -109,7 +109,31 @@
         .hero {
             padding: 80px 32px 64px;
             text-align: center;
-            background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(79, 110, 247, .18) 0%, transparent 70%);
+            background: linear-gradient(135deg, rgba(79, 110, 247, .15) 0%, rgba(45, 140, 255, .1) 25%, rgba(13, 15, 26, 0) 50%), radial-gradient(ellipse 100% 80% at 50% 0%, rgba(79, 110, 247, .25) 0%, transparent 60%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(45, 140, 255, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -100px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+            pointer-events: none;
         }
 
         .hero-badge {
@@ -141,7 +165,7 @@
         }
 
         .hero h1 .claude {
-            color: var(--claude);
+            color: var(--blue);
         }
 
         .hero-sub {
@@ -730,15 +754,18 @@
             <span>⚡</span> Model Context Protocol
         </div>
         <h1>
-            <span class="zoom">Zoom</span> meets<br>
-            <span class="claude">Claude AI</span>
+            <span class="zoom">Zoom</span> <span class="claude">MCP</span>
         </h1>
         <p class="hero-sub">
-            Manage meetings, tokens, and users through natural language.
-            A full MCP server with a native macOS desktop app.
+            A complete Model Context Protocol server for Zoom API integration.
+            Manage meetings, tokens, and users through natural language with Claude, ChatGPT, or any MCP client.
         </p>
         <div class="hero-btns">
-            <a href="#architecture" class="btn btn-primary">View Architecture</a>
+            <a href="#architecture" class="btn btn-primary">Architecture</a>
+            <a href="#features" class="btn btn-ghost">Features</a>
+            <a href="#app" class="btn btn-ghost">macOS App</a>
+            <a href="#app-features" class="btn btn-ghost">App Features</a>
+            <a href="#tools" class="btn btn-ghost">Tools</a>
             <a href="https://github.com/bstef/zoommcp" class="btn btn-ghost">GitHub</a>
         </div>
     </div>
@@ -1103,16 +1130,16 @@
                 <div class="code-title">~/.claude/claude_desktop_config.json</div>
             </div>
             <div class="code-content">{
-  "mcpServers": {
-    "zoom": {
-      "command": "node",
-      "args": ["/path/to/zoommcp/index.js"],
-      "env": {
-        "ZOOM_ACCESS_TOKEN": "&lt;your-access-token&gt;"
-      }
-    }
-  }
-}</div>
+                "mcpServers": {
+                "zoom": {
+                "command": "node",
+                "args": ["/path/to/zoommcp/index.js"],
+                "env": {
+                "ZOOM_ACCESS_TOKEN": "&lt;your-access-token&gt;"
+                }
+                }
+                }
+                }</div>
         </div>
     </section>
 
