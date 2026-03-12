@@ -529,77 +529,7 @@
             color: var(--muted);
         }
 
-        /* ─── COMMITS ─── */
-        .commits-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-        }
 
-        .commit {
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-            padding: 20px;
-            border: 1px solid var(--border);
-            border-top: none;
-            background: var(--bg2);
-        }
-
-        .commit:first-child {
-            border-top: 1px solid var(--border);
-            border-radius: var(--radius) var(--radius) 0 0;
-        }
-
-        .commit:last-child {
-            border-radius: 0 0 var(--radius) var(--radius);
-        }
-
-        .commit-hash {
-            font-family: monospace;
-            font-size: 11px;
-            color: #93c5fd;
-            min-width: 60px;
-            flex-shrink: 0;
-        }
-
-        .commit-msg {
-            flex: 1;
-            font-size: 13px;
-            color: var(--text);
-            line-height: 1.5;
-        }
-
-        .commit-tag {
-            font-size: 9px;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            flex-shrink: 0;
-            margin-left: auto;
-            display: inline-block;
-        }
-
-        .tag-feat {
-            background: rgba(34, 197, 94, .15);
-            color: #86efac;
-        }
-
-        .tag-fix {
-            background: rgba(239, 68, 68, .15);
-            color: #fca5a5;
-        }
-
-        .tag-chore {
-            background: rgba(107, 114, 128, .15);
-            color: #9ca3af;
-        }
-
-        .tag-ui {
-            background: rgba(139, 92, 246, .15);
-            color: #c4b5fd;
-        }
 
         /* ─── ENV TABLE ─── */
         .env-table {
@@ -788,7 +718,6 @@
             <a href="#app">macOS App</a>
             <a href="#tools">Tools</a>
             <a href="#setup">Setup</a>
-            <a href="#commits">Changelog</a>
             <a href="https://github.com/bstef/zoommcp">GitHub</a>
         </div>
     </nav>
@@ -1133,50 +1062,6 @@
                 }
                 }
                 }</div>
-        </div>
-    </section>
-
-    <!-- ─── CHANGELOG ─── -->
-    <div class="divider"></div>
-    <section id="commits">
-        <div class="section-label">Changelog</div>
-        <h2>Recent Commits</h2>
-        <p class="section-desc">Latest activity from the <code
-                style="color:#93c5fd;font-size:13px">feature/macos-app</code> branch.</p>
-
-        <div class="commits-list">
-            <div class="commit">
-                <div class="commit-hash">1278f6f</div>
-                <div class="commit-msg">Build macOS app for arm64 and x64 architectures — DMG and ZIP distributions
-                    ready</div>
-                <div class="commit-tag tag-feat">feat</div>
-            </div>
-            <div class="commit">
-                <div class="commit-hash">b8e3005</div>
-                <div class="commit-msg">Fix Restart Claude button white hover by excluding from secondary hover rule
-                </div>
-                <div class="commit-tag tag-fix">fix</div>
-            </div>
-            <div class="commit">
-                <div class="commit-hash">1e0bb70</div>
-                <div class="commit-msg">Add Restart Claude button with purple gradient styling</div>
-                <div class="commit-tag tag-ui">ui</div>
-            </div>
-            <div class="commit">
-                <div class="commit-hash">9c34d69</div>
-                <div class="commit-msg">Add Zoom logo as Electron app icon</div>
-                <div class="commit-tag tag-ui">ui</div>
-            </div>
-            <div class="commit">
-                <div class="commit-hash">a03a26b</div>
-                <div class="commit-msg">Fix server stop not working on first click</div>
-                <div class="commit-tag tag-fix">fix</div>
-            </div>
-            <div class="commit">
-                <div class="commit-hash">8465cbd</div>
-                <div class="commit-msg">Add macOS window buttons to token panel and match logs section styling</div>
-                <div class="commit-tag tag-ui">ui</div>
-            </div>
         </div>
     </section>
 
