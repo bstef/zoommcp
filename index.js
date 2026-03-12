@@ -519,13 +519,6 @@ async function startStdioServer() {
 }
 
 async function startHttpServer(port) {
-  const server = createMcpServer();
-  const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
-  });
-
-  await server.connect(transport);
-
   const httpServer = createServer(async (req, res) => {
     const url = new URL(req.url || "", `http://${req.headers.host || "localhost"}`);
     if (url.pathname !== MCP_HTTP_PATH) {
@@ -534,11 +527,19 @@ async function startHttpServer(port) {
       return;
     }
 
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+    });
+    const server = createMcpServer();
+    await server.connect(transport);
+
     try {
       await transport.handleRequest(req, res);
     } catch (error) {
-      res.statusCode = 500;
-      res.end(`Server error: ${error.message}`);
+      if (!res.headersSent) {
+        res.statusCode = 500;
+        res.end(`Server error: ${error.message}`);
+      }
     }
   });
 
