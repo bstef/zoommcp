@@ -83,7 +83,7 @@ fi
 
 # Relaunch the app
 echo "📱 Launching ${APP_NAME}..."
-if open -a "${APP_NAME}" 2>/dev/null; then
+if open -g -a "${APP_NAME}" 2>/dev/null; then
   echo "✓ Launch command succeeded"
 else
   echo "⚠️  Launch command failed, but continuing..." >&2

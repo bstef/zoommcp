@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zoom MCP</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <div class="logo">
+                    <img src="https://www.freepnglogos.com/uploads/zoom-logo-png/zoom-video-communications-emblem-1.png" alt="Zoom Logo" />
+                </div>
+                <div class="header-text">
+                    <h1>Zoom MCP</h1>
+                    <p>Model Context Protocol · Claude AI</p>
+                </div>
+            </div>
+            <div class="server-badge" id="statusIndicator">
+                <span class="status-dot offline"></span>
+                <span class="status-text">Offline</span>
+            </div>
+        </header>
+
+        <main>
+            <div class="status-grid" id="statusPanel" style="display:none">
+                <div class="status-card">
+                    <div class="card-icon">&#128421;</div>
+                    <div class="card-body">
+                        <div class="card-label">Claude Desktop</div>
+                        <div class="card-value" id="statusClaudeVal">—</div>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="card-icon">&#128273;</div>
+                    <div class="card-body">
+                        <div class="card-label">Token</div>
+                        <div class="card-value" id="statusTokenVal">—</div>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="card-icon">&#9889;</div>
+                    <div class="card-body">
+                        <div class="card-label">MCP Server</div>
+                        <div class="card-value" id="statusMcpVal">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="activity-bar" id="statusActivity" style="display:none">
+                <span class="activity-spinner"></span>
+                <span id="statusActivityVal"></span>
+            </div>
+
+            <div class="control-row">
+                <button id="startBtn" class="btn btn-start">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><polygon points="2,1 11,6 2,11"/></svg>
+                    Start Server
+                </button>
+                <button id="stopBtn" class="btn btn-stop" disabled>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><rect width="10" height="10" rx="1"/></svg>
+                    Stop Server
+                </button>
+                <button id="checkTokenBtn" class="btn btn-secondary btn-token-check">
+                    Check Token
+                </button>
+                <button id="refreshTokenBtn" class="btn btn-secondary btn-token-refresh">
+                    Refresh Token
+                </button>
+                <button id="restartClaudeBtn" class="btn btn-secondary btn-restart-claude">
+                    Restart Claude
+                </button>
+            </div>
+
+            <div class="bottom-panels">
+                <div class="logs-section">
+                    <div class="logs-header">
+                        <div class="terminal-chrome">
+                            <span class="chrome-dot red"></span>
+                            <span class="chrome-dot yellow"></span>
+                            <span class="chrome-dot green"></span>
+                            <span class="logs-title">Zoom MCP Server Logs</span>
+                        </div>
+                        <button id="clearBtn" class="btn-clear">Clear</button>
+                    </div>
+                    <div id="logsContainer" class="logs-container">
+                        <div class="log-entry info">Waiting for server to start...</div>
+                    </div>
+                </div>
+
+                <div class="token-section">
+                    <div class="token-header">
+                        <div class="terminal-chrome">
+                            <span class="chrome-dot red"></span>
+                            <span class="chrome-dot yellow"></span>
+                            <span class="chrome-dot green"></span>
+                            <span class="token-title">Current Zoom Token</span>
+                        </div>
+                        <span class="token-source" id="tokenSource">Source: unknown</span>
+                    </div>
+                    <div id="tokenContainer" class="token-container">Loading token...</div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <a href="https://github.com/bstef/zoommcp" target="_blank">GitHub</a>
+            <span class="footer-sep">·</span>
+            <a href="https://zoom.us" target="_blank">Zoom</a>
+            <span class="footer-sep">·</span>
+            <a href="https://claude.ai" target="_blank">Claude</a>
+        </footer>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+
+</html>

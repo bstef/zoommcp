@@ -1,0 +1,8 @@
+
+> zoom-mcp-server@1.0.0 app:build:mac
+> electron-builder --mac --publish never
+
+  • electron-builder  version=24.9.1 os=25.3.0
+  • loaded configuration  file=package.json ("build" field)
+  • packaging       platform=darwin arch=arm64 electron=30.0.0 appOutDir=dist/mac-arm64
+  ⨯ image /Users/bstef/Library/Mobile Documents/com~apple~CloudDocs/Github/zoommcp/electron/icon.png must be at least 512x512
