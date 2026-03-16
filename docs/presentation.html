@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zoom MCP — Project Presentation</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #4F6EF7;
+      --zoom:    #2D8CFF;
+      --claude:  #D97706;
+      --green:   #22c55e;
+      --purple:  #8b5cf6;
+      --red:     #ef4444;
+      --bg:      #0d0f1a;
+      --bg2:     #13162a;
+      --bg3:     #1a1d2e;
+      --border:  rgba(255,255,255,0.08);
+      --text:    #e2e8f0;
+      --muted:   #6b7280;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 8px var(--green)} 50%{opacity:.5;box-shadow:0 0 16px var(--green)} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ─── NAV ─── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,15,26,0.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 52px;
+    }
+
+    .nav-brand { font-weight: 700; font-size: 14px; color: #fff; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    .nav-links { display: flex; gap: 16px; align-items: center; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 12px; transition: color .15s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-back { padding: 5px 12px; background: rgba(79,110,247,.12); border: 1px solid rgba(79,110,247,.3); border-radius: 6px; color: #93c5fd !important; font-size: 12px; font-weight: 600; }
+    .nav-back:hover { background: rgba(79,110,247,.22) !important; }
+
+    /* ─── SLIDE SYSTEM ─── */
+    .slide {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 64px;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .slide-inner {
+      max-width: 1060px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .slide-num {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(79,110,247,.7);
+      margin-bottom: 12px;
+    }
+
+    .slide h1 {
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .slide h2 {
+      font-size: clamp(24px, 3vw, 38px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: #fff;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .slide h3 { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+
+    .slide p { font-size: 16px; color: var(--muted); line-height: 1.7; }
+
+    .accent-zoom   { color: var(--zoom); }
+    .accent-claude { color: var(--claude); }
+    .accent-blue   { color: var(--blue); }
+    .accent-green  { color: var(--green); }
+    .accent-purple { color: var(--purple); }
+
+    /* ─── SLIDE BACKGROUNDS ─── */
+    .slide-hero {
+      background: radial-gradient(ellipse 100% 80% at 50% -10%, rgba(79,110,247,.2) 0%, transparent 70%),
+                  radial-gradient(circle 800px at 10% 60%, rgba(45,140,255,.06) 0%, transparent 70%),
+                  radial-gradient(circle 800px at 90% 40%, rgba(217,119,6,.06) 0%, transparent 70%),
+                  var(--bg);
+    }
+
+    .slide-dark { background: var(--bg2); }
+
+    .slide-gradient {
+      background: linear-gradient(160deg, rgba(79,110,247,.08) 0%, var(--bg) 50%);
+    }
+
+    .slide-purple {
+      background: linear-gradient(160deg, rgba(139,92,246,.08) 0%, var(--bg) 60%);
+    }
+
+    .slide-zoom {
+      background: linear-gradient(160deg, rgba(45,140,255,.08) 0%, var(--bg) 60%);
+    }
+
+    /* ─── HERO SLIDE ─── */
+    .hero-tagline {
+      font-size: clamp(16px, 2vw, 22px);
+      color: var(--muted);
+      max-width: 700px;
+      margin-bottom: 12px;
+    }
+
+    .hero-quote {
+      display: inline-block;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.1);
+      border-left: 3px solid var(--zoom);
+      padding: 12px 20px;
+      border-radius: 0 8px 8px 0;
+      font-size: 15px;
+      color: rgba(255,255,255,.6);
+      font-style: italic;
+      margin-bottom: 40px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat { text-align: left; }
+    .hero-stat .hs-val { font-size: 32px; font-weight: 800; color: #fff; letter-spacing: -1px; }
+    .hero-stat .hs-label { font-size: 12px; color: var(--muted); }
+
+    /* ─── PROBLEM SLIDE ─── */
+    .problem-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .problem-item {
+      display: flex;
+      gap: 16px;
+      padding: 20px 24px;
+      background: rgba(239,68,68,.06);
+      border: 1px solid rgba(239,68,68,.2);
+      border-radius: 12px;
+      align-items: flex-start;
+    }
+
+    .problem-item .pi-icon { font-size: 22px; flex-shrink: 0; }
+    .problem-item h4 { font-size: 14px; font-weight: 700; color: #fca5a5; margin-bottom: 4px; }
+    .problem-item p { font-size: 13px; color: var(--muted); }
+
+    /* ─── SOLUTION SLIDE ─── */
+    .solution-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: start;
+      margin-top: 32px;
+    }
+
+    .before-after {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .ba-header {
+      padding: 12px 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .ba-header.before { background: rgba(239,68,68,.1); color: #fca5a5; border-bottom: 1px solid rgba(239,68,68,.2); }
+    .ba-header.after  { background: rgba(34,197,94,.1);  color: #86efac; border-bottom: 1px solid rgba(34,197,94,.2); }
+
+    .ba-body { padding: 16px 20px; }
+    .ba-body li { font-size: 13px; color: var(--muted); list-style: none; padding: 5px 0; display: flex; align-items: flex-start; gap: 8px; }
+    .ba-body li::before { content: attr(data-icon); flex-shrink: 0; }
+
+    /* ─── ARCHITECTURE SLIDE ─── */
+    .arch-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .arch-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .arch-box {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .arch-box .ab-icon { font-size: 28px; flex-shrink: 0; }
+    .arch-box .ab-label { font-size: 14px; font-weight: 700; color: #fff; }
+    .arch-box .ab-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .arch-box.blue   { border-color: rgba(79,110,247,.4);  background: rgba(79,110,247,.06); }
+    .arch-box.zoom   { border-color: rgba(45,140,255,.4);  background: rgba(45,140,255,.06); }
+    .arch-box.claude { border-color: rgba(217,119,6,.4);   background: rgba(217,119,6,.06); }
+    .arch-box.green  { border-color: rgba(34,197,94,.4);   background: rgba(34,197,94,.06); }
+
+    .arch-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 80px;
+      flex-shrink: 0;
+      gap: 4px;
+    }
+
+    .arch-connector .line {
+      width: 2px;
+      height: 30px;
+      background: linear-gradient(180deg, rgba(79,110,247,.6) 0%, rgba(255,255,255,.1) 100%);
+    }
+
+    .arch-connector .label { font-size: 10px; color: var(--muted); text-align: center; }
+
+    /* ─── FEATURES SLIDE ─── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 32px;
+    }
+
+    .feat-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px 20px;
+      transition: border-color .2s, transform .2s;
+    }
+
+    .feat-card:hover { border-color: rgba(79,110,247,.4); transform: translateY(-2px); }
+
+    .feat-card .fc-icon { font-size: 24px; margin-bottom: 12px; }
+    .feat-card h4 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .feat-card p { font-size: 12px; color: var(--muted); line-height: 1.55; }
+
+    /* ─── APP MOCKUP SLIDE ─── */
+    .mockup-slide-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      margin-top: 32px;
+    }
+
+    .app-mockup {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,.6);
+    }
+
+    .app-tb {
+      background: #1a1d2e;
+      border-bottom: 1px solid var(--border);
+      padding: 13px 16px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .app-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+    .app-dot.r { background: #ff5f57; } .app-dot.y { background: #febc2e; } .app-dot.g { background: #28c840; }
+    .app-title { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.35); margin-left: 8px; }
+
+    .app-body { padding: 20px; }
+
+    .app-header {
+      background: linear-gradient(135deg, #1a1d2e 0%, #2d3154 100%);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .app-logo { display: flex; align-items: center; gap: 10px; }
+    .app-logo-icon { width: 36px; height: 36px; background: #2D8CFF; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .app-logo-text { font-size: 14px; font-weight: 700; color: #fff; }
+    .app-logo-sub { font-size: 9px; color: rgba(255,255,255,.4); }
+    .app-badge { font-size: 10px; font-weight: 600; color: #86efac; background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
+    .badge-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+
+    .app-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .app-stat { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+    .app-stat .as-icon { font-size: 14px; margin-bottom: 4px; }
+    .app-stat .as-label { font-size: 8px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+    .app-stat .as-val { font-size: 11px; font-weight: 600; color: #fff; margin-top: 1px; }
+
+    .app-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .app-btn { padding: 7px 12px; border-radius: 6px; font-size: 10px; font-weight: 600; }
+    .app-btn-start { background: var(--blue); color: #fff; }
+    .app-btn-stop  { background: var(--bg3); color: #fca5a5; border: 1px solid rgba(239,68,68,.4); }
+    .app-btn-check { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff; }
+    .app-btn-claude{ background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #fff; }
+
+    .app-term {
+      background: #0a0c14;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.05);
+    }
+
+    .app-term-header { background: #1a1d2e; padding: 8px 12px; display: flex; align-items: center; gap: 5px; border-bottom: 1px solid rgba(255,255,255,.05); }
+    .td { width: 8px; height: 8px; border-radius: 50%; }
+    .td.r{background:#ff5f57;}.td.y{background:#febc2e;}.td.g{background:#28c840;}
+    .term-lbl { font-size: 9px; font-weight: 600; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: .8px; margin-left: 6px; }
+    .app-term-body { padding: 10px 12px; font-family: 'SF Mono', monospace; font-size: 10px; line-height: 1.8; }
+    .tl-g { color: #86efac; } .tl-b { color: #93c5fd; } .tl-m { color: rgba(255,255,255,.25); }
+
+    .mockup-highlights { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+    .mockup-highlights li { display: flex; gap: 14px; align-items: flex-start; }
+    .mh-icon { font-size: 20px; flex-shrink: 0; }
+    .mh-text h4 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+    .mh-text p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* ─── TOOLS SLIDE ─── */
+    .tools-layout {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 32px;
+    }
+
+    .tool-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      transition: border-color .2s;
+    }
+
+    .tool-card:hover { border-color: rgba(79,110,247,.4); }
+    .tc-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .tc-name { font-size: 12px; font-weight: 700; color: #fff; font-family: 'SF Mono', monospace; margin-bottom: 3px; }
+    .tc-desc { font-size: 11px; color: var(--muted); }
+
+    /* ─── SETUP SLIDE ─── */
+    .setup-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .step-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .step-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 14px;
+      box-shadow: 0 4px 14px rgba(79,110,247,.4);
+    }
+
+    .step-card h4 { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .step-card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    code.inline {
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 11px;
+      background: rgba(255,255,255,.08);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: #86efac;
+    }
+
+    /* ─── CODE BLOCK ─── */
+    .code-block {
+      background: #0a0c14;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    .cb-header {
+      background: #1a1d2e;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cb-dots { display: flex; gap: 6px; }
+    .cb-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .cb-dot.r{background:#ff5f57;}.cb-dot.y{background:#febc2e;}.cb-dot.g{background:#28c840;}
+    .cb-file { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.4); font-family: 'SF Mono', monospace; }
+    .cb-lang { font-size: 10px; color: var(--muted); background: rgba(255,255,255,.06); padding: 2px 8px; border-radius: 4px; font-family: 'SF Mono', monospace; }
+
+    .cb-body {
+      padding: 18px 20px;
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .c-k { color: #93c5fd; } .c-s { color: #86efac; } .c-p { color: rgba(255,255,255,.4); } .c-ph { color: #fcd34d; }
+
+    /* ─── EXAMPLE QUERIES SLIDE ─── */
+    .queries-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 32px;
+    }
+
+    .query-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .query-bubble {
+      background: rgba(79,110,247,.1);
+      border: 1px solid rgba(79,110,247,.25);
+      border-radius: 12px 12px 12px 4px;
+      padding: 14px 18px;
+      flex: 1;
+      font-size: 14px;
+      color: #e2e8f0;
+      font-style: italic;
+    }
+
+    .query-icon { font-size: 22px; flex-shrink: 0; margin-top: 4px; }
+
+    /* ─── CTA SLIDE ─── */
+    .cta-content { text-align: center; }
+    .cta-content p { max-width: 600px; margin: 0 auto 40px; font-size: 18px; }
+
+    .cta-links {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .cta-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all .15s;
+    }
+
+    .cta-btn-primary { background: var(--blue); color: #fff; box-shadow: 0 4px 20px rgba(79,110,247,.4); }
+    .cta-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(79,110,247,.5); }
+    .cta-btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .cta-btn-ghost:hover { background: var(--bg3); border-color: rgba(255,255,255,.2); }
+    .cta-btn-docs { background: rgba(217,119,6,.12); color: #fcd34d; border: 1px solid rgba(217,119,6,.3); }
+    .cta-btn-docs:hover { background: rgba(217,119,6,.22); }
+
+    .branches-row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+    .branch-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      font-family: 'SF Mono', monospace;
+      transition: all .15s;
+    }
+
+    .bp-main   { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); color: #86efac; }
+    .bp-macos  { background: rgba(139,92,246,.1); border: 1px solid rgba(139,92,246,.3); color: #c4b5fd; }
+    .bp-openai { background: rgba(20,184,166,.1); border: 1px solid rgba(20,184,166,.3); color: #5eead4; }
+
+    /* ─── SLIDE NAV DOTS ─── */
+    .slide-nav {
+      position: fixed;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 50;
+    }
+
+    .slide-nav a {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.2);
+      display: block;
+      transition: all .2s;
+    }
+
+    .slide-nav a:hover { background: rgba(255,255,255,.6); }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 32px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    @media (max-width: 768px) {
+      .slide { padding: 48px 24px; }
+      .features-grid { grid-template-columns: 1fr 1fr; }
+      .tools-layout { grid-template-columns: 1fr 1fr; }
+      .setup-steps { grid-template-columns: 1fr 1fr; }
+      .mockup-slide-layout { grid-template-columns: 1fr; }
+      .queries-grid { grid-template-columns: 1fr; }
+      .solution-split { grid-template-columns: 1fr; }
+      .slide-nav { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .tools-layout { grid-template-columns: 1fr; }
+      .setup-steps { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="../index.html" class="nav-brand">
+    <div class="nav-dot"></div>
+    Zoom MCP
+  </a>
+  <div class="nav-links">
+    <a href="#slide-1">Intro</a>
+    <a href="#slide-3">Architecture</a>
+    <a href="#slide-5">App</a>
+    <a href="#slide-7">Setup</a>
+    <a href="https://github.com/bstef/zoommcp" target="_blank" rel="noopener">GitHub</a>
+    <a href="../index.html" class="nav-back">← Back to Site</a>
+  </div>
+</nav>
+
+<!-- SIDE NAV DOTS -->
+<nav class="slide-nav" aria-hidden="true">
+  <a href="#slide-1" title="Intro"></a>
+  <a href="#slide-2" title="Problem"></a>
+  <a href="#slide-3" title="Solution"></a>
+  <a href="#slide-4" title="Architecture"></a>
+  <a href="#slide-5" title="Features"></a>
+  <a href="#slide-6" title="macOS App"></a>
+  <a href="#slide-7" title="Tools"></a>
+  <a href="#slide-8" title="Setup"></a>
+  <a href="#slide-9" title="Examples"></a>
+  <a href="#slide-10" title="Get Started"></a>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 1 — HERO
+═══════════════════════════════════════════════════════ -->
+<section class="slide slide-hero" id="slide-1">
+  <div class="slide-inner">
+    <div class="slide-num">01 / Introduction</div>
+    <h1>
+      <span class="accent-zoom">Zoom</span> meets<br>
+      <span class="accent-claude">Claude AI</span>
+    </h1>
+    <p class="hero-tagline">
+      AI-powered meeting management through natural language.<br>
+      A full MCP server with a native macOS desktop app.
+    </p>
+    <div class="hero-quote">
+      "Show my meetings for today" · "Create a standup at 10am" · "Who attended yesterday's call?"
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hs-val accent-zoom">9</div>
+        <div class="hs-label">Zoom API Tools</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-val accent-green">1</div>
+        <div class="hs-label">Command to Start</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-val accent-purple">3</div>
+        <div class="hs-label">Branches / Builds</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hs-val accent-blue">MIT</div>
+        <div class="hs-label">License</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 2 — THE PROBLEM
+═══════════════════════════════════════════════════════ -->
+<section class="slide slide-dark" id="slide-2">
+  <div class="slide-inner">
+    <div class="slide-num">02 / Problem</div>
+    <h2>Meeting Management<br>is <span style="color:#fca5a5">Time-Consuming</span></h2>
+    <p>Context switching and manual workflows add friction to every meeting interaction.</p>
+
+    <div class="problem-list">
+      <div class="problem-item">
+        <div class="pi-icon">🔄</div>
+        <div>
+          <h4>App Switching Overhead</h4>
+          <p>Jumping between Calendar, Zoom portal, and browser wastes 5–10 minutes per meeting setup.</p>
+        </div>
+      </div>
+      <div class="problem-item">
+        <div class="pi-icon">🔐</div>
+        <div>
+          <h4>Manual Authentication</h4>
+          <p>Zoom OAuth tokens expire every hour with no automatic refresh — causing silent failures mid-session.</p>
+        </div>
+      </div>
+      <div class="problem-item">
+        <div class="pi-icon">🖱️</div>
+        <div>
+          <h4>No Natural Language Interface</h4>
+          <p>Finding recordings, listing attendees, or creating meetings requires navigating multiple UI layers.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 3 — THE SOLUTION
+═══════════════════════════════════════════════════════ -->
+<section class="slide slide-gradient" id="slide-3">
+  <div class="slide-inner">
+    <div class="slide-num">03 / Solution</div>
+    <h2>Zoom MCP:<br><span class="accent-blue">AI-Native</span> Meeting Control</h2>
+    <p>Connect Claude Desktop directly to your Zoom account. Manage everything through conversation.</p>
+
+    <div class="solution-split">
+      <div class="before-after">
+        <div class="ba-header before">Before — Manual Workflow</div>
+        <div class="ba-body">
+          <ul>
+            <li data-icon="❌">Open Zoom portal in browser</li>
+            <li data-icon="❌">Navigate to Meetings tab</li>
+            <li data-icon="❌">Click New Meeting, fill form</li>
+            <li data-icon="❌">Copy link back to calendar</li>
+            <li data-icon="❌">Repeat for every change</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="before-after">
+        <div class="ba-header after">After — With Zoom MCP</div>
+        <div class="ba-body">
+          <ul>
+            <li data-icon="✅">Open Claude Desktop</li>
+            <li data-icon="✅">"Create a standup tomorrow 10am"</li>
+            <li data-icon="✅">Done — link returned instantly</li>
+            <li data-icon="✅">Token auto-refreshed in background</li>
+            <li data-icon="✅">Ask follow-up questions naturally</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 4 — ARCHITECTURE
+═══════════════════════════════════════════════════════ -->
+<section class="slide slide-dark" id="slide-4">
+  <div class="slide-inner">
+    <div class="slide-num">04 / Architecture</div>
+    <h2>System Architecture</h2>
+    <p>A secure bridge from Claude to Zoom via the Model Context Protocol.</p>
+
+    <div class="arch-flow">
+      <div class="arch-row">
+        <div class="arch-box claude">
+          <div class="ab-icon">🖥️</div>
+          <div>
+            <div class="ab-label">Claude Desktop</div>
+            <div class="ab-sub">AI interface — natural language</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:16px;padding:0 32px;">
+        <div style="flex:1;height:2px;background:linear-gradient(90deg,rgba(79,110,247,.6),rgba(255,255,255,.1));"></div>
+        <div style="font-size:11px;color:var(--muted);white-space:nowrap;">stdio / MCP Protocol</div>
+        <div style="flex:1;height:2px;background:linear-gradient(90deg,rgba(255,255,255,.1),rgba(79,110,247,.6));"></div>
+      </div>
+
+      <div class="arch-row" style="gap:16px;">
+        <div class="arch-box blue">
+          <div class="ab-icon">⚙️</div>
+          <div>
+            <div class="ab-label">MCP Server</div>
+            <div class="ab-sub">index.js · Node.js 18+</div>
+          </div>
+        </div>
+        <div style="font-size:20px;color:var(--muted);flex-shrink:0;">⇄</div>
+        <div class="arch-box green">
+          <div class="ab-icon">🔑</div>
+          <div>
+            <div class="ab-label">Token Manager</div>
+            <div class="ab-sub">Auto-refresh · anti-loop safeguards</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:16px;padding:0 32px;">
+        <div style="flex:1;height:2px;background:linear-gradient(90deg,rgba(45,140,255,.6),rgba(255,255,255,.1));"></div>
+        <div style="font-size:11px;color:var(--muted);white-space:nowrap;">HTTPS / OAuth 2.0</div>
+        <div style="flex:1;height:2px;background:linear-gradient(90deg,rgba(255,255,255,.1),rgba(45,140,255,.6));"></div>
+      </div>
+
+      <div class="arch-row">
+        <div class="arch-box zoom">
+          <div class="ab-icon">📹</div>
+          <div>
+            <div class="ab-label">Zoom API v2</div>
+            <div class="ab-sub">REST · Server-to-Server OAuth</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 5 — KEY FEATURES
+═══════════════════════════════════════════════════════ -->
+<section class="slide slide-gradient" id="slide-5">
+  <div class="slide-inner">
+    <div class="slide-num">05 / Features</div>
+    <h2>Key Capabilities</h2>
+    <p>Engineered for reliability, security, and a seamless developer experience.</p>
+
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="fc-icon">🔑</div>
+        <h4>Smart Token Management</h4>
+        <p>Validates before fetching. Only requests a new token when expired or within 5 min of expiry.</p>
+      </div>
+      <div class="feat-card">
+        <div class="fc-icon">🔄</div>
+        <h4>Auto Token Refresh</h4>
+        <p>Background monitor with 30s cooldown and max 3 failure limit to prevent restart loops.</p>
+      </div>
+      <div class="feat-card">
+        <div class="fc-icon">🛡️</div>
+        <h4>iCloud-Safe Launcher</h4>
+        <p>Avoids shell execution restrictions on macOS paths with spaces or iCloud Drive locations.</p>
+      </div>
+      <div class="feat-card">
+        <div class="fc-icon">🚀</div>
+        <h4>Claude Auto-Recovery</h4>
+        <p>Multi-method startup verification, up to 15 retries. Auto-reopens Claude if it closes.</p>
+      </div>
+      <div class="feat-card">
+        <div class="fc-icon">📊</div>
+        <h4>Live Status Monitoring</h4>
+        <p>Token expiry countdown with color-coded indicators: ✅ fresh, 📊 soon, ⚠️ critical.</p>
+      </div>
+      <div class="feat-card">
+        <div class="fc-icon">🍎</div>
+        <h4>Native macOS App</h4>
+        <p>Electron app with real-time logs, one-click server controls, and token management.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 6 — macOS APP
+═══════════════════════════════════════════════════════ -->
+<section class="slide slide-purple" id="slide-6">
+  <div class="slide-inner">
+    <div class="slide-num">06 / macOS App</div>
+    <h2>Native <span class="accent-purple">Electron App</span></h2>
+    <p>No terminal required. Manage Zoom MCP from a polished desktop interface.</p>
+
+    <div class="mockup-slide-layout">
+      <!-- App mockup -->
+      <div class="app-mockup">
+        <div class="app-tb">
+          <div class="app-dot r"></div>
+          <div class="app-dot y"></div>
+          <div class="app-dot g"></div>
+          <div class="app-title">Zoom MCP · macOS App</div>
+        </div>
+        <div class="app-body">
+          <div class="app-header">
+            <div class="app-logo">
+              <div class="app-logo-icon">📹</div>
+              <div>
+                <div class="app-logo-text">Zoom MCP</div>
+                <div class="app-logo-sub">MCP · Claude AI</div>
+              </div>
+            </div>
+            <div class="app-badge"><div class="badge-dot"></div>Online</div>
+          </div>
+
+          <div class="app-stats">
+            <div class="app-stat">
+              <div class="as-icon">🖥️</div>
+              <div class="as-label">Claude</div>
+              <div class="as-val">✅ Running</div>
+            </div>
+            <div class="app-stat">
+              <div class="as-icon">🔑</div>
+              <div class="as-label">Token</div>
+              <div class="as-val">57m 12s</div>
+            </div>
+            <div class="app-stat">
+              <div class="as-icon">⚡</div>
+              <div class="as-label">Server</div>
+              <div class="as-val">✅ Active</div>
+            </div>
+          </div>
+
+          <div class="app-btns">
+            <div class="app-btn app-btn-start">▶ Start</div>
+            <div class="app-btn app-btn-stop">■ Stop</div>
+            <div class="app-btn app-btn-check">🔍 Token</div>
+            <div class="app-btn app-btn-claude">🔁 Claude</div>
+          </div>
+
+          <div class="app-term">
+            <div class="app-term-header">
+              <div class="td r"></div><div class="td y"></div><div class="td g"></div>
+              <div class="term-lbl">Server Logs</div>
+            </div>
+            <div class="app-term-body"><span class="tl-g">✅ Claude Desktop is running</span>
+<span class="tl-g">✅ Token valid. No refresh needed.</span>
+<span class="tl-m">━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="tl-g">🚀 MCP Server running on stdio</span>
+<span class="tl-g">🔄 Token monitoring active</span>
+<span class="tl-b">🔑 Expires in 57m 12s (3:44 PM)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Highlights -->
+      <ul class="mockup-highlights">
+        <li>
+          <div class="mh-icon">▶️</div>
+          <div class="mh-text">
+            <h4>One-Click Server Control</h4>
+            <p>Start and stop the MCP server instantly with live status reflected in the dashboard.</p>
+          </div>
+        </li>
+        <li>
+          <div class="mh-icon">📋</div>
+          <div class="mh-text">
+            <h4>Live Log Viewer</h4>
+            <p>Terminal-style log panel with color-coded output streams server stdout/stderr in real time.</p>
+          </div>
+        </li>
+        <li>
+          <div class="mh-icon">🔐</div>
+          <div class="mh-text">
+            <h4>Token Panel</h4>
+            <p>View, check, and refresh your Zoom access token — with source attribution.</p>
+          </div>
+        </li>
+        <li>
+          <div class="mh-icon">🔁</div>
+          <div class="mh-text">
+            <h4>Restart Claude</h4>
+            <p>Purple gradient button restarts Claude Desktop after token refreshes that require config reload.</p>
+          </div>
+        </li>
+        <li>
+          <div class="mh-icon">📦</div>
+          <div class="mh-text">
+            <h4>Distributable .app + .dmg</h4>
+            <p>Build for arm64 and x64 with <code class="inline">./build-app.sh</code>. Drop in <code class="inline">dist/</code> and ship.</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 7 — TOOLS
+═══════════════════════════════════════════════════════ -->
+<section class="slide slide-zoom" id="slide-7">
+  <div class="slide-inner">
+    <div class="slide-num">07 / MCP Tools</div>
+    <h2>9 <span class="accent-zoom">Zoom API</span> Tools</h2>
+    <p>Everything Claude needs to manage your Zoom account through natural language.</p>
+
+    <div class="tools-layout">
+      <div class="tool-card">
+        <div class="tc-icon">📋</div>
+        <div><div class="tc-name">list_meetings</div><div class="tc-desc">Scheduled, live, upcoming, previous</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tc-icon">🔍</div>
+        <div><div class="tc-name">get_meeting</div><div class="tc-desc">Full details for a meeting ID</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tc-icon">➕</div>
+        <div><div class="tc-name">create_meeting</div><div class="tc-desc">Topic, time, duration, settings</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tc-icon">✏️</div>
+        <div><div class="tc-name">update_meeting</div><div class="tc-desc">Edit time, agenda, password</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tc-icon">🗑️</div>
+        <div><div class="tc-name">delete_meeting</div><div class="tc-desc">Cancel a meeting by ID</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tc-icon">👥</div>
+        <div><div class="tc-name">list_users</div><div class="tc-desc">Active, inactive, pending users</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tc-icon">👤</div>
+        <div><div class="tc-name">get_user</div><div class="tc-desc">User by ID or email</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tc-icon">🙋</div>
+        <div><div class="tc-name">get_meeting_participants</div><div class="tc-desc">Attendee list for past meetings</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tc-icon">🎬</div>
+        <div><div class="tc-name">get_meeting_recordings</div><div class="tc-desc">Cloud recording links &amp; metadata</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 8 — SETUP
+═══════════════════════════════════════════════════════ -->
+<section class="slide slide-dark" id="slide-8">
+  <div class="slide-inner">
+    <div class="slide-num">08 / Setup</div>
+    <h2>Get Running in <span class="accent-green">4 Steps</span></h2>
+    <p>From clone to Claude in minutes.</p>
+
+    <div class="setup-steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h4>Clone &amp; Install</h4>
+        <p><code class="inline">git clone</code> the repo and run <code class="inline">npm install</code>.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h4>Configure</h4>
+        <p>Copy <code class="inline">.env.example</code> → <code class="inline">.env</code>. Add your Zoom OAuth credentials.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h4>Edit Claude Config</h4>
+        <p>Add the <code class="inline">zoom</code> entry pointing to <code class="inline">launch-mcp.js</code>.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <h4>Restart Claude</h4>
+        <p>Reopen Claude Desktop. Start talking to Zoom.</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="cb-header">
+        <div class="cb-dots"><div class="cb-dot r"></div><div class="cb-dot y"></div><div class="cb-dot g"></div></div>
+        <div class="cb-file">claude_desktop_config.json</div>
+        <div class="cb-lang">JSON</div>
+      </div>
+      <div class="cb-body"><span class="c-p">{</span>
+  <span class="c-k">"mcpServers"</span><span class="c-p">: {</span>
+    <span class="c-k">"zoom"</span><span class="c-p">: {</span>
+      <span class="c-k">"command"</span><span class="c-p">:</span> <span class="c-s">"node"</span><span class="c-p">,</span>
+      <span class="c-k">"args"</span><span class="c-p">: [</span><span class="c-ph">"/absolute/path/to/zoommcp/launch-mcp.js"</span><span class="c-p">]</span>
+    <span class="c-p">}</span>
+  <span class="c-p">}</span>
+<span class="c-p">}</span></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 9 — EXAMPLE QUERIES
+═══════════════════════════════════════════════════════ -->
+<section class="slide slide-gradient" id="slide-9">
+  <div class="slide-inner">
+    <div class="slide-num">09 / Demo</div>
+    <h2>Natural Language<br><span class="accent-claude">in Action</span></h2>
+    <p>Real prompts you can ask Claude once Zoom MCP is connected.</p>
+
+    <div class="queries-grid">
+      <div class="query-card">
+        <div class="query-icon">📋</div>
+        <div class="query-bubble">"Show me my upcoming Zoom meetings for this week"</div>
+      </div>
+      <div class="query-card">
+        <div class="query-icon">➕</div>
+        <div class="query-bubble">"Create a team standup meeting tomorrow at 10am EST for 30 minutes"</div>
+      </div>
+      <div class="query-card">
+        <div class="query-icon">👥</div>
+        <div class="query-bubble">"Who attended yesterday's client call?"</div>
+      </div>
+      <div class="query-card">
+        <div class="query-icon">🎬</div>
+        <div class="query-bubble">"Get the recording link from last week's project review"</div>
+      </div>
+      <div class="query-card">
+        <div class="query-icon">✏️</div>
+        <div class="query-bubble">"Update meeting 123456789 — change the start time to 2pm"</div>
+      </div>
+      <div class="query-card">
+        <div class="query-icon">🗑️</div>
+        <div class="query-bubble">"Cancel the Zoom meeting with ID 987654321"</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 10 — CTA
+═══════════════════════════════════════════════════════ -->
+<section class="slide slide-hero" id="slide-10">
+  <div class="slide-inner">
+    <div class="slide-num">10 / Get Started</div>
+    <div class="cta-content">
+      <h2>
+        Ready to talk to<br>
+        <span class="accent-zoom">Zoom</span> through <span class="accent-claude">Claude</span>?
+      </h2>
+      <p>Open source, MIT licensed, and built for developers who want AI-native Zoom control.</p>
+
+      <div class="cta-links">
+        <a href="https://github.com/bstef/zoommcp" target="_blank" rel="noopener" class="cta-btn cta-btn-primary">
+          ⭐ View on GitHub
+        </a>
+        <a href="../index.html" class="cta-btn cta-btn-ghost">
+          ← Back to Homepage
+        </a>
+        <a href="EXECUTIVE_SUMMARY.md" class="cta-btn cta-btn-docs">
+          📊 Executive Summary
+        </a>
+      </div>
+
+      <div class="branches-row">
+        <a href="https://github.com/bstef/zoommcp/tree/main" target="_blank" rel="noopener" class="branch-pill bp-main">
+          ⎇ main
+        </a>
+        <a href="https://github.com/bstef/zoommcp/tree/feature/macos-app" target="_blank" rel="noopener" class="branch-pill bp-macos">
+          ⎇ feature/macos-app
+        </a>
+        <a href="https://github.com/bstef/zoommcp/tree/feature/openai" target="_blank" rel="noopener" class="branch-pill bp-openai">
+          ⎇ feature/openai
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<footer>
+  <div style="margin-bottom:8px;display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
+    <a href="https://github.com/bstef/zoommcp">GitHub</a>
+    <a href="../index.html">Homepage</a>
+    <a href="EXECUTIVE_SUMMARY.md">Executive Summary</a>
+    <a href="QUICK_REFERENCE.md">Quick Reference</a>
+    <a href="https://modelcontextprotocol.io" target="_blank" rel="noopener">MCP Docs</a>
+  </div>
+  Zoom MCP Presentation · MIT License
+</footer>
+
+</body>
+</html>
