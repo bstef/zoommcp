@@ -45,6 +45,7 @@ function buildChildEnv() {
         ZOOM_MCP_LOG_DIR: appLogDir,
         ZOOM_APP_DATA_DIR: app.getPath('userData'),
         ZOOM_CHECK_LOGFILE: appTokenLogFile,
+        ELECTRON_PID: String(process.pid),
         ...(envFile ? { ZOOM_ENV_FILE: envFile } : {}),
         ...(tokenInfo.token ? { ZOOM_ACCESS_TOKEN: tokenInfo.token } : {}),
     };
@@ -176,7 +177,7 @@ function startServer() {
             if (mainWindow) {
                 let message;
                 let type;
-                
+
                 if (serverManuallyStopped) {
                     message = '⏹️  MCP server stopped';
                     type = 'info';
@@ -190,7 +191,7 @@ function startServer() {
                     message = `❌ MCP server exited with code ${code}`;
                     type = 'close';
                 }
-                
+
                 mainWindow.webContents.send('server-message', { type, message });
                 mainWindow.webContents.send('server-status', { running: false });
             }
@@ -215,7 +216,7 @@ function startServer() {
 function stopServer() {
     try {
         if (serverProcess && !serverProcess.killed) {
-            console.log('Killing server process');
+            console.log('Killing server process PID:', serverProcess.pid);
             serverManuallyStopped = true;
             if (mainWindow) {
                 mainWindow.webContents.send('server-message', {
@@ -223,7 +224,17 @@ function stopServer() {
                     message: '⏹️  Stopping MCP server...',
                 });
             }
-            serverProcess.kill();
+            const pid = serverProcess.pid;
+            serverProcess.kill('SIGTERM');
+
+            // Fallback: SIGKILL after 3s if still alive (handles unresponsive node)
+            const killTimer = setTimeout(() => {
+                try {
+                    process.kill(pid, 'SIGKILL');
+                    console.log('Force-killed server PID:', pid);
+                } catch (_) { /* already dead */ }
+            }, 3000);
+            if (killTimer.unref) killTimer.unref();
         }
     } catch (err) {
         console.error('Error stopping server:', err);

@@ -876,7 +876,22 @@ async function main() {
   
   // Ensure timer doesn't prevent process from exiting
   tokenDisplayTimer.unref();
-  
+
+  // Parent-death watchdog: if launched by the Electron app, exit when it does.
+  // This handles force-quit / SIGKILL on the Electron process.
+  const electronPid = parseInt(process.env.ELECTRON_PID || "", 10);
+  if (electronPid) {
+    const watchdog = setInterval(() => {
+      try {
+        process.kill(electronPid, 0); // signal 0 = existence check, no actual signal sent
+      } catch (_) {
+        logEvent("Electron parent (PID " + electronPid + ") is gone — exiting MCP server");
+        process.exit(0);
+      }
+    }, 3000);
+    watchdog.unref(); // don't prevent clean exit when transport closes normally
+  }
+
   await server.connect(transport);
   logEvent("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   logEvent("✅ Zoom MCP Server is running on stdio");

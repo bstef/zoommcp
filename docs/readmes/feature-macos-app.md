@@ -19,6 +19,7 @@ This branch is dedicated to the macOS desktop app experience (Electron packaging
 - **Automatic Claude Recovery**: If Claude closes while running, the monitor detects it and attempts to reopen it
 - **One-Command Setup**: `./run.sh` keeps the banner UX and delegates unified startup to `run-mcp.sh`
 - **Claude Launch Hardening**: `launch-mcp.js` avoids shell execution issues in Claude MCP environments on macOS/iCloud paths
+- **Clean Process Lifecycle**: MCP server exits automatically when the Electron app closes — including force-quit (SIGKILL). A parent-death watchdog polls the Electron PID every 3 seconds and exits if it's gone, preventing orphan `node` processes
 - **Production Ready**: Comprehensive error handling, logging support, and cross-platform compatibility
 
 ## Prerequisites
@@ -196,6 +197,7 @@ ZOOM_CHECK_VERBOSE          # Enable verbose logging (set to any non-empty value
 ZOOM_CHECK_LOGFILE          # Log file path (default: ./logs/zoom_token.log)
 ZOOM_APP_AUTOSTART          # Electron app only: auto-start MCP on launch (default: enabled)
 ZOOM_ENV_FILE               # Optional explicit .env path for app startup token loading
+ELECTRON_PID                # Set automatically by the Electron app — used by the MCP server watchdog to exit when the app closes (do not set manually)
 ```
 
 **Customizing Token Monitoring:**
@@ -217,6 +219,7 @@ ZOOM_TOKEN_DISPLAY_INTERVAL=120 ./run.sh
   - Avoids macOS shell execution restrictions from Claude log contexts.
 - **Native macOS app startup**: run `npm run app` for dev or open `dist/mac-arm64/Zoom MCP.app` after build
   - Packaged app auto-starts MCP by default. Set `ZOOM_APP_AUTOSTART=0` to disable.
+  - The MCP server (`node index.js`) exits automatically when the Electron app closes, including force-quit. The app passes its PID via `ELECTRON_PID`; the server polls it every 3 seconds and exits if the parent is gone. A SIGKILL fallback is also sent 3 seconds after a normal stop signal.
 
 ## Claude Desktop Configuration
 
